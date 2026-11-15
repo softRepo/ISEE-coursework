@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXACT_PATHS = {
     ".gitignore", ".gitattributes", "README.md", "PRIVACY.md",
     "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
-    "人工智能/README.md", "电工训/README.md",
+    "人工智能/README.md", "电子工程训练（甲）/README.md",
 }
 FACE_PREFIX = "人工智能/人脸表情识别/"
 LAB_PREFIX = "人工智能/AILAB/"
@@ -76,14 +76,14 @@ APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'fe3a59f275
  '人工智能/AILAB/AI_Lab3/report/report.pdf': '17f1cd1232c2568329b2154f1138aed8079df569b5931610daaa8c257056c451',
  '人工智能/人脸表情识别/docs/presentation.pptx': '755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2',
  '人工智能/人脸表情识别/docs/report.pdf': '3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6',
- '电工训/基础实验/基础部分实验报告.pdf': 'a5a51f9d4466c309365427cde7a6a368670badc0959edd55e1edb2e8fe86bcad',
- '电工训/小车/最终照片/01-上视图.png': '903ca3d1c2e11591b36b4d9d9122f064c0985a47531ac5b1107706152bd1afb7',
- '电工训/小车/最终照片/02-底部结构.png': 'c49b190c5a090ecc91de3eaa4ea8d409154ce15b9768c015f09cb4b65bf0cc55',
- '电工训/小车/最终照片/03-正面结构.png': '089b2c53887d5420782dc87579285486265b6fb341bd17c06adbcadfde3f062a',
- '电工训/小车/最终照片/04-侧面全貌.png': '9e94ff91ac407ae74c5e65ff32417f0c25c2ce974a890f7299aa06c9811a90dc',
- '电工训/智能插座/智能插座测试报告.pdf': '84501652ea9ef517532bd7abc17af228245255e82edef82b116f5a9a81b048d7',
- '电工训/智能插座/照片/01-PCB元件面.png': 'd656f0356ce88f56b4a2343c88d4978e30d213ccfa09947dc26c7e0f87793c6d',
- '电工训/智能插座/照片/02-PCB焊接面.png': '30db4649fa16854093f4c6153cf5b9907bc6b3c220af32ca95ba5539e46e1177'}
+ '电子工程训练（甲）/基础实验/基础部分实验报告.pdf': 'a5a51f9d4466c309365427cde7a6a368670badc0959edd55e1edb2e8fe86bcad',
+ '电子工程训练（甲）/小车/最终照片/01-上视图.png': '903ca3d1c2e11591b36b4d9d9122f064c0985a47531ac5b1107706152bd1afb7',
+ '电子工程训练（甲）/小车/最终照片/02-底部结构.png': 'c49b190c5a090ecc91de3eaa4ea8d409154ce15b9768c015f09cb4b65bf0cc55',
+ '电子工程训练（甲）/小车/最终照片/03-正面结构.png': '089b2c53887d5420782dc87579285486265b6fb341bd17c06adbcadfde3f062a',
+ '电子工程训练（甲）/小车/最终照片/04-侧面全貌.png': '9e94ff91ac407ae74c5e65ff32417f0c25c2ce974a890f7299aa06c9811a90dc',
+ '电子工程训练（甲）/智能插座/智能插座测试报告.pdf': '84501652ea9ef517532bd7abc17af228245255e82edef82b116f5a9a81b048d7',
+ '电子工程训练（甲）/智能插座/照片/01-PCB元件面.png': 'd656f0356ce88f56b4a2343c88d4978e30d213ccfa09947dc26c7e0f87793c6d',
+ '电子工程训练（甲）/智能插座/照片/02-PCB焊接面.png': '30db4649fa16854093f4c6153cf5b9907bc6b3c220af32ca95ba5539e46e1177'}
 
 
 def allowed_path(name: str) -> bool:
