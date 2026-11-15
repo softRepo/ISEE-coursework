@@ -31,7 +31,6 @@
 !/.githooks/pre-commit
 !/.github/workflows/privacy.yml
 !/.gitignore
-!/PRIVACY.md
 !/README.md
 !/tools/check_privacy.py
 !/人工智能/AILAB/AI_Lab1/README.md

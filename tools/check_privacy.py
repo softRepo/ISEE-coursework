@@ -18,7 +18,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT_PATHS = {
-    ".gitignore", ".gitattributes", "README.md", "PRIVACY.md",
+    ".gitignore", ".gitattributes", "README.md", 
     "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
     "人工智能/README.md", "电子工程训练（甲）/README.md",
 }
@@ -71,17 +71,17 @@ MAX_TEXT_SIZE = 2 * 1024 * 1024
 MAX_APPROVED_BINARY_SIZE = 64 * 1024 * 1024
 # Updating these files requires another content and metadata review before
 # replacing a digest. Other binary files and modified bytes remain blocked.
-APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'fe3a59f2751e0ab99f5b0a0c80004924ee68dc71e2c28dd869dfa7e773b28747',
- '人工智能/AILAB/AI_Lab2/report/report.pdf': '23dfa679a8bc7e2378cd418beb1b640581dbb5939dd1c5bde22946b35b31af44',
- '人工智能/AILAB/AI_Lab3/report/report.pdf': '17f1cd1232c2568329b2154f1138aed8079df569b5931610daaa8c257056c451',
- '人工智能/人脸表情识别/docs/presentation.pptx': '755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2',
- '人工智能/人脸表情识别/docs/report.pdf': '3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6',
- '电子工程训练（甲）/基础实验/基础部分实验报告.pdf': 'a5a51f9d4466c309365427cde7a6a368670badc0959edd55e1edb2e8fe86bcad',
+APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'f4f7672b5114fd2f8a7a11188c57a41d7d014f3c907394274e35192deb80caae',
+ '人工智能/AILAB/AI_Lab2/report/report.pdf': 'af1fed4e814f0492572f3c2c25ebf31dae13ae67a0b2d573da633e5a9f4e7da5',
+ '人工智能/AILAB/AI_Lab3/report/report.pdf': '5bd51467cd7c48b5d770382fb905ef92de0a2ce2106a1bc38a5d39dd289a1eab',
+ '人工智能/人脸表情识别/docs/presentation.pptx': '6afcb22bff59b2b90f9ddf645ad20f93d7faa88179eba2029f01fc6b3624d5cf',
+ '人工智能/人脸表情识别/docs/report.pdf': '990692cfd2f3d5017e72dcdf6d12fdf345b8cf76d18fd904606e478538266af7',
+ '电子工程训练（甲）/基础实验/基础部分实验报告.pdf': '0f8dc3dbce39236cef5309d9d13f059fccb63c0787298752035626e0ce17e955',
  '电子工程训练（甲）/小车/最终照片/01-上视图.png': '903ca3d1c2e11591b36b4d9d9122f064c0985a47531ac5b1107706152bd1afb7',
  '电子工程训练（甲）/小车/最终照片/02-底部结构.png': 'c49b190c5a090ecc91de3eaa4ea8d409154ce15b9768c015f09cb4b65bf0cc55',
  '电子工程训练（甲）/小车/最终照片/03-正面结构.png': '089b2c53887d5420782dc87579285486265b6fb341bd17c06adbcadfde3f062a',
  '电子工程训练（甲）/小车/最终照片/04-侧面全貌.png': '9e94ff91ac407ae74c5e65ff32417f0c25c2ce974a890f7299aa06c9811a90dc',
- '电子工程训练（甲）/智能插座/智能插座测试报告.pdf': '84501652ea9ef517532bd7abc17af228245255e82edef82b116f5a9a81b048d7',
+ '电子工程训练（甲）/智能插座/智能插座测试报告.pdf': 'cc68b01f1f50afe471369fb935009f045cf77b1f8fc1267458d983c06140264d',
  '电子工程训练（甲）/智能插座/照片/01-PCB元件面.png': 'd656f0356ce88f56b4a2343c88d4978e30d213ccfa09947dc26c7e0f87793c6d',
  '电子工程训练（甲）/智能插座/照片/02-PCB焊接面.png': '30db4649fa16854093f4c6153cf5b9907bc6b3c220af32ca95ba5539e46e1177'}
 

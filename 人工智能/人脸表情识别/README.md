@@ -1,8 +1,8 @@
 # 基于 PyQt5 与深度学习的人脸表情识别系统设计与实现
 
-实验报告：[阅读脱敏 PDF（34 页）](docs/report.pdf) · [LaTeX 源码](docs/report.tex)
+实验报告：[实验报告 PDF（34 页）](docs/report.pdf) · [LaTeX 源码](docs/report.tex)
 
-演示文稿：[下载脱敏 PPTX（8 页）](docs/presentation.pptx)
+演示文稿：[演示 PPTX（8 页）](docs/presentation.pptx)
 
 ## 1. 项目简介
 
@@ -269,17 +269,11 @@ models/detectors/blaze_face_short_range.tflite
 
 ## 8. 模型权重与实验材料
 
-本仓库发布训练、评估和 GUI 源码，以及经过检查的汇总实验结果。模型权重、第三方检测器二进制文件、原始数据集、逐样本人脸图像、摄像头截图和原始课程提交材料均不随仓库分发。
-
-- 模型权重需要按上述训练命令自行生成，放入 `checkpoints/`；GUI 首次使用前需要准备所选模型的权重。
-- 可选检测器的文件名和来源说明见 `models/detectors/README.md`。
-- 脱敏实验报告可直接阅读 [PDF（34 页）](docs/report.pdf)，源码为 `docs/report.tex`，可使用 XeLaTeX 编译；原始插图已移除，位置保留为占位说明。发布的 PDF 已清除文档属性，并检查正文、书签及附件。
-- 脱敏演示文稿为 [PPTX（8 页）](docs/presentation.pptx)，保留原有实验文字、结果与通用图标；已移除汇报人身份、学校元素、人脸示例和模板追踪信息，人脸示例位置改用文字占位。
-- 仅汇总的分类统计和消融分析位于 `docs/results/`，不包含逐样本数据或人脸图片。
-- 评估脚本默认不导出样例图片。只有主动指定大于 0 的 `--max_samples`、`--max_wrong_samples`、`--max_correct_samples` 或 `--max_prediction_samples` 时，才会生成对应样例；导出的图片仍包含人脸，不应提交到仓库。
-- GUI 的图片选择功能在本机读取图片，摄像头识别在本机处理；当前源码没有向外部服务器上传图像的逻辑。
-
-隐私范围和检查方法见 [仓库隐私说明](../../PRIVACY.md)。在仓库根目录提交前运行 `python tools/check_privacy.py --tracked`，可通过 `git config core.hooksPath .githooks` 启用本地提交检查。
+- 模型权重放入 `checkpoints/`，可通过前面的训练命令生成；GUI 使用前需准备所选模型的权重。
+- 可选人脸检测器的文件名和来源见 `models/detectors/README.md`。
+- [实验报告 PDF（34 页）](docs/report.pdf) · [LaTeX 源码](docs/report.tex) · [演示 PPTX（8 页）](docs/presentation.pptx)。
+- 分类统计和消融分析位于 `docs/results/`。
+- 评估样例导出数量通过 `--max_samples`、`--max_wrong_samples`、`--max_correct_samples` 或 `--max_prediction_samples` 控制，默认均为 0。
 
 ## 9. 常见问题
 
