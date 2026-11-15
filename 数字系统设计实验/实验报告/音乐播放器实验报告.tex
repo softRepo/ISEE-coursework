@@ -1,0 +1,881 @@
+\documentclass{ctexart}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{xparse,tikz}
+\usetikzlibrary{calc}
+\usepackage[margin = 2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{zhnumber}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{caption}
+\emergencystretch=2em
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codekw}{RGB}{22,72,150}
+\definecolor{codecm}{RGB}{0,105,95}
+\definecolor{codestr}{RGB}{160,90,0}
+\definecolor{keybg}{RGB}{255,235,156}
+
+\lstdefinestyle{verilogstyle}{
+  language=Verilog,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecm},
+  stringstyle=\color{codestr},
+  backgroundcolor=\color{codebg},
+  frame=single,
+  rulecolor=\color{black!35},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny\color{black!45},
+  xleftmargin=2em,
+  framexleftmargin=1.5em
+}
+\lstset{style=verilogstyle}
+
+\newcommand{\key}[1]{%
+  \tikz[baseline=(keybox.base)]{
+    \node[
+      draw=blue!18,
+      line width=0.7pt,
+      rounded corners=2pt,
+      inner xsep=3pt,
+      inner ysep=1.2pt,
+      fill=white,
+      text=orange!55!black,
+      font=\ttfamily\bfseries
+    ] (keybox) {#1};
+  }%
+}
+\newcommand{\img}[2][]{\includegraphics[#1]{#2}}
+
+\NewDocumentCommand{\makecover}{}
+{
+  \begin{titlepage}
+    \centering
+    \vspace*{5cm}
+    {\LARGE\bfseries 数字系统设计实验\par}
+    \vspace{1.5cm}
+    {\Large 音乐播放器实验报告\par}
+  \end{titlepage}
+}
+\NewDocumentCommand{\makecoveri}{}
+{
+  \begin{center}{\LARGE\bfseries 音乐播放实验}\end{center}
+}
+
+\newcounter{makepart}
+\setcounter{makepart}{1}
+\NewDocumentCommand{\makepart}{+m}
+{
+  \vspace{1em}
+  \begin{flushleft}
+   \large\bfseries\zhnumber{\arabic{makepart}}、#1
+  \end{flushleft}
+  \stepcounter{makepart}
+}
+
+\NewDocumentCommand{\zdx}{}
+{
+  \tikz[remember picture,overlay]{
+    \coordinate (s) at ([shift={(1,-3)}]current page.north west);
+    \coordinate (e) at ([shift={(1,3)}]current page.south west);
+    \foreach \x in{0,0.15,...,9.2}
+    {
+      \fill[] ($(s)+(0,-\x)$) circle(1pt);
+    }
+    \foreach \x in{0,0.15,...,9.2}
+    {
+      \fill[] ($(e)+(0,\x)$) circle(1pt);
+    }
+    \node[text width=1em,align=center]at($(s)!0.5!(e)$){装\\[10pt]订\\[10pt]线};
+  }
+}
+
+\pagestyle{plain}
+
+\begin{document}
+\makecover
+\makecoveri
+\zdx
+
+\section*{一、实验目的}
+
+本报告以实验 19 ``音乐播放实验''为主实验，实验 11 ``异步输入的同步器和开关防颤电路''、实验 15 ``直接数字频率合成技术 DDS''作为其前置子实验。三者之间的关系是：实验 11 提供可靠按键输入，实验 15 提供音符正弦采样生成方法，实验 19 将二者与乐曲读取、主控制器、音频接口时钟同步等模块组合成完整音乐播放器。
+
+\begin{enumerate}
+  \item 掌握音乐播放器中音符编码、乐曲 ROM、频率 ROM、DDS 和音频接口之间的层次化连接方法。
+  \item 掌握 \key{play\_button}、\key{next\_button} 等机械按键的同步、防颤与单周期脉冲化处理方法，理解 \key{reset} 作为系统复位按键的作用。
+  \item 掌握 DDS 正弦信号发生器的相位累加、查表、象限镜像与 16 位补码采样输出方法。
+  \item 能够使用 ModelSim 对 \texttt{mcu}、\texttt{song\_reader}、\texttt{note\_player}、\texttt{pulse\_divider}、\texttt{pulse\_sync} 和 \texttt{music\_player} 等模块进行波形验证。
+  \item 能够在 Vivado 中完成 RTL 综合、DCM 时钟管理 IP 配置、引脚约束、综合实现和比特流生成，为后续 FPGA 板级调试做好准备。
+\end{enumerate}
+
+\section*{二、实验任务与总体要求}
+
+主实验要求设计一个可播放四首乐曲的音乐播放器。系统设置三个主要按键：\key{reset}、\key{play\_button} 和 \key{next\_button}。其中 \key{reset} 为高电平有效复位按键；\key{play\_button} 经按键处理后产生 \key{play\_pause} 脉冲，用于在播放与暂停之间切换；\key{next\_button} 经按键处理后产生 \key{next} 脉冲，用于切换到下一首乐曲。播放状态由 LED0 指示，当前曲号由 LED2、LED3 指示。
+
+音乐播放器的设计要求可概括为表 \ref{tab:music_req}。
+
+\begin{table}[H]
+  \centering
+  \caption{音乐播放器主要功能要求}
+  \label{tab:music_req}
+  \begin{tabular}{p{3.2cm}p{11.2cm}}
+    \toprule
+    功能项 & 设计要求 \\
+    \midrule
+    按键控制 & \key{play\_button} 控制播放/暂停切换；\key{next\_button} 控制下一首；\key{reset} 复位系统。\\
+    曲目存储 & 使用 \texttt{song\_rom} 存储 4 首音乐，每首最多 32 个音符组，每组为 \{note, duration\}。\\
+    音符产生 & 使用 \texttt{frequency\_rom} 将 note 转换为 DDS 相位增量，再由 DDS 产生 16 位正弦采样。\\
+    采样速率 & 音频接口采样速率为 $48\,\mathrm{kHz}$，由 \texttt{NewFrame} 同步到系统时钟域形成 \texttt{ready}。\\
+    节拍基准 & 将 $48\,\mathrm{kHz}$ 的 ready 脉冲进行 1000 分频，得到 $48\,\mathrm{Hz}$ 的 beat，音长单位为 $1/48\,\mathrm{s}$。\\
+    FPGA 工程 & 完成 DCM 时钟配置、RTL 综合、约束和比特流生成；上板实际试听暂时预留。\\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section*{三、实验设备与软件环境}
+
+\begin{enumerate}
+  \item 装有 Vivado 和 ModelSim SE 的计算机。
+  \item Nexys Video Artix-7 FPGA 多媒体开发板。
+  \item ADAU1761 音频编解码器及耳机或有源音箱。
+  \item Verilog HDL 源代码、提供的 \texttt{AudioInterface.edf}、\texttt{song\_rom.v}、\texttt{frequency\_rom.v} 等文件。
+\end{enumerate}
+
+\section*{四、系统总体设计}
+
+音乐播放器采用自顶向下设计方式。外部按键先通过按键处理单元转换为稳定单周期控制脉冲；主控制器 \texttt{mcu} 根据控制脉冲输出播放使能、曲号和播放复位；\texttt{song\_reader} 根据曲号从乐曲 ROM 中逐个读取音符；\texttt{note\_player} 按音符编号查频率 ROM，再驱动 DDS 产生正弦采样；采样经音频接口模块发送给 ADAU1761。系统顶层结构如图 \ref{fig:top_block} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.92\textwidth]{图片/lab19/系统顶层框图.png}
+  \caption{音乐播放器系统顶层框图}
+  \label{fig:top_block}
+\end{figure}
+
+从图 \ref{fig:top_block} 可以看出，系统存在两个时钟域：系统逻辑使用 $100\,\mathrm{MHz}$ 的 \texttt{sys\_clk}，音频接口使用 $12.5\,\mathrm{MHz}$ 的 \texttt{audio\_clk}。音频接口在新采样帧到来时输出 \texttt{NewFrame} 脉冲，该信号不直接驱动系统逻辑，而是先经过同步化电路变成系统时钟域内的 \texttt{ready} 脉冲，随后作为 DDS 采样请求信号。
+
+\section*{五、子实验一：按键同步、防颤与脉冲转换}
+
+\subsection*{5.1 设计原理}
+
+机械按键输入具有两个问题：一是按键相对于 FPGA 系统时钟是异步信号，直接采样可能造成亚稳态；二是按下和释放时会产生数毫秒级抖动，若不处理会导致一次按键被识别为多次操作。因此按键处理单元采用``同步器--防颤 FSM--脉冲转换''三级结构，如图 \ref{fig:lab11_block} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.68\textwidth]{图片/lab11/lab11框图.png}
+  \caption{按键处理模块结构框图}
+  \label{fig:lab11_block}
+\end{figure}
+
+在本实验中，\key{play\_button} 和 \key{next\_button} 都必须经过该模块处理。输出脉冲 \key{play\_pause} 和 \key{next} 宽度均为一个 \texttt{clk} 周期，便于 \texttt{mcu} 精确识别一次按键事件。\key{reset} 是系统复位信号，在本设计中直接作为全局复位输入使用。
+
+\subsection*{5.2 核心 Verilog 代码}
+
+\begin{lstlisting}[caption={按键处理核心代码}]
+// 按键处理单元：同步、防颤、单周期脉冲化
+module button_process_unit #(parameter sim = 0)(
+    input  wire clk,
+    input  wire reset,
+    input  wire ButtonIn,
+    output wire ButtonOut
+);
+    wire button_sync;
+    wire button_level;
+
+    synchronizer u_sync(
+        .clk(clk), .reset(reset),
+        .async_in(ButtonIn), .sync_out(button_sync)
+    );
+
+    debouncer #(.sim(sim)) u_debounce(
+        .clk(clk), .reset(reset),
+        .in(button_sync), .out(button_level)
+    );
+
+    pulse_converter u_pulse(
+        .clk(clk), .reset(reset),
+        .in(button_level), .out(ButtonOut)
+    );
+endmodule
+
+// 两级触发器同步异步输入，降低亚稳态传播概率
+always @(posedge clk) begin
+    if (reset) begin
+        sync_0 <= 1'b0;
+        sync_1 <= 1'b0;
+    end else begin
+        sync_0 <= async_in;
+        sync_1 <= sync_0;
+    end
+end
+
+// 防颤后做上升沿检测，输出一个 clk 周期宽度的按键事件
+assign out = in & ~in_dly;
+\end{lstlisting}
+
+\subsection*{5.3 ModelSim 波形分析}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab11/modelsim仿真图及局部放大.png}
+  \caption{按键处理模块 ModelSim 仿真波形及局部放大}
+  \label{fig:lab11_wave}
+\end{figure}
+
+图 \ref{fig:lab11_wave} 中，\texttt{ButtonIn} 在按下和释放阶段均出现快速高低翻转，这是测试平台模拟的机械抖动。经过同步和防颤后，内部稳定电平不会立刻跟随抖动变化，而是在输入保持稳定足够长时间后才改变。最终输出 \texttt{ButtonOut} 只在一次有效按下时产生一个窄脉冲。
+
+局部放大部分可以看出，即使 \texttt{ButtonIn} 在短时间内多次翻转，\texttt{ButtonOut} 也没有连续抖动输出，说明防颤 FSM 成功屏蔽了无效边沿。输出脉冲宽度严格等于一个时钟周期，满足后续 \texttt{mcu} 对 \key{play\_pause} 和 \key{next} 单事件控制的要求。由此可得结论：按键处理模块能够将不可靠的机械异步输入转换为可靠的同步控制脉冲。
+
+\section*{六、子实验二：DDS 正弦信号发生器}
+
+\subsection*{6.1 DDS 原理}
+
+DDS 的核心是相位累加器。每当采样脉冲 \texttt{sampling\_pulse} 到来时，相位累加器加上频率控制字 $K$，相位高位作为正弦 ROM 地址，查出当前采样值。输出频率满足
+\begin{equation}
+  f_o = \frac{K f_c}{2^{22}},
+  \label{eq:dds_freq}
+\end{equation}
+其中 $f_c=48\,\mathrm{kHz}$ 为采样频率，22 为本设计相位累加器位宽。实验中只存储 $1/4$ 周期的 1024 个正弦采样点，其余象限通过地址镜像和补码取反得到，结构如图 \ref{fig:dds_block} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.9\textwidth]{图片/lab15/优化后的dds结构.png}
+  \caption{优化后的 DDS 结构}
+  \label{fig:dds_block}
+\end{figure}
+
+\subsection*{6.2 核心 Verilog 代码}
+
+\begin{lstlisting}[caption={DDS 相位累加与象限镜像核心代码}]
+// k 为 22 位相位增量；sampling_pulse 请求产生一个新采样
+wire [21:0] next_phase = phase_acc + k;
+wire [11:0] sine_index = next_phase[21:10];
+wire [9:0]  index_low  = sine_index[9:0];
+
+always @(posedge clk) begin
+    if (reset) begin
+        phase_acc <= 22'd0;
+        new_sample_ready <= 1'b0;
+        sample <= 16'd0;
+    end else begin
+        // ROM 同步读出，因此地址、象限和有效标志采用流水线对齐
+        new_sample_ready <= valid_stage2;
+        valid_stage2 <= valid_stage1;
+        valid_stage1 <= sampling_pulse;
+        area_stage2 <= area_stage1;
+
+        if (valid_stage2) begin
+            case (area_stage2)
+                2'd0, 2'd1: sample <= raw_data;        // 正半周
+                2'd2, 2'd3: sample <= ~raw_data + 1'b1; // 负半周
+            endcase
+        end
+
+        if (sampling_pulse) begin
+            phase_acc <= next_phase;
+            area_stage1 <= sine_index[11:10];
+            case (sine_index[11:10])
+                2'd0, 2'd2: rom_addr <= index_low;
+                2'd1, 2'd3: rom_addr <= (index_low == 10'd0) ?
+                                       10'd1023 : (10'd1024 - index_low);
+            endcase
+        end
+    end
+end
+\end{lstlisting}
+
+\subsection*{6.3 ModelSim 波形分析}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab15/modelsim仿真图及局部放大图.png}
+  \caption{DDS ModelSim 仿真波形及局部放大}
+  \label{fig:dds_wave}
+\end{figure}
+
+图 \ref{fig:dds_wave} 中，测试平台依次改变频率控制字 $K$，并周期性产生 \texttt{sampling\_pulse}。从波形可观察到：每当 \texttt{sampling\_pulse} 到来后，DDS 在流水延迟后更新 \texttt{sample}，同时 \texttt{new\_sample\_ready} 标志采样值有效。将 \texttt{sample} 设置为模拟波形显示后，可以看到输出呈连续正弦形态。
+
+局部放大图中，$K$ 变大时相邻采样点之间的相位步进增大，单位时间内正弦周期数增多；$K$ 变小时相位步进减小，输出频率降低。这与式 \eqref{eq:dds_freq} 完全一致。波形没有出现明显跳变或错误符号翻转，说明象限镜像和补码取反逻辑正确。结论是：DDS 子模块能够根据频率控制字稳定地产生不同频率的 16 位正弦采样，为主实验的音符播放提供了可靠基础。
+
+\section*{七、主实验：音乐播放器模块设计}
+
+\subsection*{7.1 主控制器 mcu}
+
+\subsubsection*{7.1.1 结构与状态转移}
+
+\texttt{mcu} 的任务是响应 \key{play\_pause}、\key{next} 和 \texttt{song\_done}，输出播放使能 \texttt{play}、复位播放链路的 \texttt{reset\_play} 以及当前曲号 \texttt{song[1:0]}。结构框图和算法流程如图 \ref{fig:mcu_block}、图 \ref{fig:mcu_flow} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.55\textwidth]{图片/lab19/mcu的结构框图.png}
+  \caption{mcu 结构框图}
+  \label{fig:mcu_block}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.75\textwidth]{图片/lab19/mcu控制器的算法流程图.png}
+  \caption{mcu 控制器算法流程图}
+  \label{fig:mcu_flow}
+\end{figure}
+
+状态机包括 RESET、PAUSE、PLAY 和 NEXT 四个状态。系统复位后先进入 RESET，用一个周期产生 \texttt{reset\_play}，随后进入 PAUSE。按下 \key{play\_button} 后，按键处理单元输出 \key{play\_pause}，mcu 切换到 PLAY；再次按下则返回 PAUSE。按下 \key{next\_button} 后，按键处理单元输出 \key{next}，mcu 进入 NEXT 状态，曲号加一，并产生一次 \texttt{reset\_play}，随后转入 PLAY 播放下一首。
+
+\subsubsection*{7.1.2 核心 Verilog 代码}
+
+\begin{lstlisting}[caption={mcu 状态机核心代码}]
+// 主控制器：play_pause 控制播放/暂停，next 控制下一首
+always @(posedge clk) begin
+    if (reset) begin
+        state <= ST_RESET;
+        song <= 2'd0;
+    end else begin
+        case (state)
+            ST_RESET: state <= ST_PAUSE;
+            ST_PAUSE: begin
+                if (next) begin
+                    state <= ST_NEXT;
+                    song <= song + 1'b1; // 切换下一首
+                end else if (play_pause) begin
+                    state <= ST_PLAY;
+                end
+            end
+            ST_PLAY: begin
+                if (next) begin
+                    state <= ST_NEXT;
+                    song <= song + 1'b1;
+                end else if (play_pause || song_done) begin
+                    state <= song_done ? ST_RESET : ST_PAUSE;
+                end
+            end
+            ST_NEXT: state <= ST_PLAY; // NEXT 只保持一个周期
+        endcase
+    end
+end
+
+always @(*) begin
+    play = 1'b0;
+    reset_play = 1'b0;
+    case (state)
+        ST_RESET: reset_play = 1'b1;
+        ST_PLAY:  play = 1'b1;
+        ST_NEXT:  reset_play = 1'b1;
+    endcase
+end
+\end{lstlisting}
+
+\subsubsection*{7.1.3 波形分析}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab19/mcu波形图.png}
+  \caption{mcu ModelSim 仿真波形}
+  \label{fig:mcu_wave}
+\end{figure}
+
+图 \ref{fig:mcu_wave} 中，复位撤销后，第一次 \texttt{play\_pause} 脉冲使 \texttt{play} 由 0 变为 1，说明系统进入播放状态；第二次 \texttt{play\_pause} 脉冲使 \texttt{play} 回到 0，说明暂停控制有效。当 \texttt{next} 脉冲出现时，\texttt{song} 立即加一，同时 \texttt{reset\_play} 出现高电平脉冲，用于复位 \texttt{song\_reader} 与 \texttt{note\_player} 的播放进程。随后状态回到播放，\texttt{play} 再次有效。
+
+当测试平台给出 \texttt{song\_done} 脉冲时，mcu 识别到当前歌曲结束，产生复位播放链路的动作并返回暂停等待状态。仿真结论是：mcu 可以正确响应播放/暂停、下一首和曲目结束事件，曲号计数和播放复位逻辑符合实验要求。
+
+\subsection*{7.2 乐曲读取模块 song\_reader}
+
+\subsubsection*{7.2.1 结构与地址组织}
+
+\texttt{song\_rom} 容量为 $2^7 \times 12$ bits，共存放 4 首曲目，每首占用 32 个地址。地址高 2 位由 \texttt{song[1:0]} 决定，低 5 位由当前音符序号 \texttt{note\_index} 决定。每个 ROM 数据高 6 位为 note，低 6 位为 duration。结构与流程如图 \ref{fig:song_block}、图 \ref{fig:song_flow} 所示。
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.58\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/lab19/song_reader的结构框图.png}
+    \caption{song\_reader 结构框图}
+    \label{fig:song_block}
+  \end{minipage}\hfill
+  \begin{minipage}{0.32\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/lab19/song_reader控制器的算法流程图.png}
+    \caption{song\_reader 控制器流程图}
+    \label{fig:song_flow}
+  \end{minipage}
+\end{figure}
+
+\subsubsection*{7.2.2 核心 Verilog 代码}
+
+\begin{lstlisting}[caption={song\_reader ROM 读取与新音符请求核心代码}]
+// song 选择高 2 位地址，note_index 选择一首歌中的音符位置
+always @(posedge clk) begin
+    if (reset) begin
+        state <= ST_IDLE;
+        note_index <= 5'd0;
+        new_note <= 1'b0;
+        song_done <= 1'b0;
+    end else begin
+        new_note <= 1'b0;
+        song_done <= 1'b0;
+        case (state)
+            ST_IDLE: begin
+                note_index <= 5'd0;
+                if (play) begin
+                    rom_addr <= {song, 5'd0};
+                    state <= ST_WAIT_ROM;
+                end
+            end
+            ST_FETCH: begin
+                rom_addr <= {song, note_index};
+                state <= ST_WAIT_ROM;
+            end
+            ST_CHECK: begin
+                // duration 为 0 表示当前歌曲结束
+                state <= (rom_data[5:0] == 6'd0) ? ST_DONE : ST_NEW_NOTE;
+            end
+            ST_NEW_NOTE: begin
+                note <= rom_data[11:6];
+                duration <= rom_data[5:0];
+                new_note <= 1'b1; // 通知 note_player 装载新音符
+                state <= ST_WAIT;
+            end
+            ST_WAIT: begin
+                if (!play) state <= ST_IDLE;
+                else if (note_done) begin
+                    note_index <= note_index + 1'b1;
+                    state <= (&note_index) ? ST_DONE : ST_FETCH;
+                end
+            end
+            ST_DONE: begin
+                song_done <= 1'b1;
+                state <= ST_IDLE;
+            end
+        endcase
+    end
+end
+\end{lstlisting}
+
+\subsubsection*{7.2.3 波形分析}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab19/song_reader波形图.png}
+  \caption{song\_reader ModelSim 仿真波形}
+  \label{fig:song_wave}
+\end{figure}
+
+图 \ref{fig:song_wave} 中，\texttt{play} 拉高后，\texttt{song\_reader} 开始从当前曲目首地址读取音符，并输出 \texttt{note}、\texttt{duration}。每当 \texttt{note\_done} 脉冲到来，说明 \texttt{note\_player} 已播放完当前音符，\texttt{song\_reader} 将低 5 位地址加一，读取下一组 \{note, duration\}，随后输出 \texttt{new\_note} 通知 \texttt{note\_player} 装载。
+
+波形中 \texttt{new\_note} 只保持一个时钟周期，满足握手控制需求；\texttt{note} 和 \texttt{duration} 在 \texttt{new\_note} 有效时已经稳定，说明 ROM 同步读出的等待拍处理正确。当读到 duration 为 0 的终止项时，模块输出一个周期的 \texttt{song\_done}。仿真结论是：song\_reader 能够按照曲号和音符序号顺序读取乐谱，并在曲目结束时正确反馈给 mcu。
+
+\subsection*{7.3 音符播放模块 note\_player}
+
+\subsubsection*{7.3.1 结构与音长控制}
+
+\texttt{note\_player} 是主实验的核心声音生成模块。它接收 \texttt{song\_reader} 输出的音符编号和音长信息，将 note 送入 \texttt{frequency\_rom} 得到 DDS 频率控制字，再以 $48\,\mathrm{kHz}$ 采样速率驱动 DDS 输出正弦采样。同时，模块使用 \texttt{beat} 对音长进行计数，播放满指定 beat 数后输出 \texttt{note\_done}。结构与流程如图 \ref{fig:note_block}、图 \ref{fig:note_flow} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.56\textwidth]{图片/lab19/note_player模块的结构框图.png}
+  \caption{note\_player 结构框图}
+  \label{fig:note_block}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.68\textwidth]{图片/lab19/note_player控制器的算法流程图.png}
+  \caption{note\_player 控制器流程图}
+  \label{fig:note_flow}
+\end{figure}
+
+\subsubsection*{7.3.2 核心 Verilog 代码}
+
+\begin{lstlisting}[caption={note\_player 音符装载、DDS 驱动与音长计数核心代码}]
+frequency_rom frequency_rom_inst (
+    .clk(clk),
+    .addr(note_reg),
+    .dout(freq_word)
+);
+
+assign dds_k = {2'b00, freq_word}; // frequency_rom 输出高位补 0 后送入 DDS
+
+dds dds_inst (
+    .clk(clk),
+    .reset(reset || !play_enable),
+    .k(dds_k),
+    .sampling_pulse(sampling_pulse),
+    .new_sample_ready(sample_ready),
+    .sample(sample)
+);
+
+always @(posedge clk) begin
+    if (reset || !play_enable) begin
+        note_reg <= 6'd0;
+        duration_reg <= 6'd0;
+        beat_count <= 6'd0;
+        note_done <= 1'b0;
+    end else begin
+        note_done <= 1'b0;
+        if (load_new_note) begin
+            note_reg <= note_to_load;
+            duration_reg <= duration_to_load;
+            beat_count <= 6'd0; // 新音符重新开始计时
+        end else if (beat && (duration_reg != 6'd0)) begin
+            if (beat_count + 1'b1 >= duration_reg) begin
+                duration_reg <= 6'd0;
+                beat_count <= 6'd0;
+                note_done <= 1'b1; // 当前音符播放完成
+            end else begin
+                beat_count <= beat_count + 1'b1;
+            end
+        end
+    end
+end
+\end{lstlisting}
+
+\subsubsection*{7.3.3 波形分析}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab19/note_player波形图.png}
+  \caption{note\_player ModelSim 仿真波形}
+  \label{fig:note_wave}
+\end{figure}
+
+图 \ref{fig:note_wave} 显示，\texttt{play\_enable} 有效后，测试平台首先给出 \texttt{load\_new\_note}，音符编号和音长被锁存进模块内部。随后 \texttt{sampling\_pulse} 周期性到来，DDS 连续输出正弦 \texttt{sample}；\texttt{beat} 则作为低频音长计数基准，每来一次表示经过 $1/48\,\mathrm{s}$ 的音长单位。
+
+当 beat 计数达到当前 duration 后，\texttt{note\_done} 输出一个周期高电平，请求 \texttt{song\_reader} 送入下一音符。波形局部可以看到，不同 note 装载后，\texttt{sample} 的振荡快慢随之改变，说明频率 ROM 与 DDS 的连接有效。仿真结论是：note\_player 同时完成了``音高生成''和``音长控制''两项任务，是音乐播放器能够按乐谱播放旋律的关键模块。
+
+\subsection*{7.4 同步化电路 pulse\_sync}
+
+由于 \texttt{NewFrame} 来自音频接口时钟域，而播放器控制逻辑工作在系统时钟域，因此需要同步化电路。其结构如图 \ref{fig:pulse_sync_block} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.55\textwidth]{图片/lab19/同步化电路.png}
+  \caption{同步化电路结构}
+  \label{fig:pulse_sync_block}
+\end{figure}
+
+\begin{lstlisting}[caption={pulse\_sync 核心代码}]
+// 两级触发器同步，第三级用于上升沿检测
+always @(posedge clk) begin
+    if (reset) begin
+        sync_0 <= 1'b0;
+        sync_1 <= 1'b0;
+        sync_2 <= 1'b0;
+    end else begin
+        sync_0 <= in;
+        sync_1 <= sync_0;
+        sync_2 <= sync_1;
+    end
+end
+
+assign out = sync_1 & ~sync_2; // 输出一个 clk 周期的同步脉冲
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.82\textwidth]{图片/lab19/pulse_sync波形.png}
+  \caption{pulse\_sync ModelSim 仿真波形}
+  \label{fig:pulse_sync_wave}
+\end{figure}
+
+图 \ref{fig:pulse_sync_wave} 中，输入 \texttt{in} 包含不同相位和不同宽度的脉冲。经过同步器后，输出 \texttt{out} 均被调整到 \texttt{clk} 上升沿对齐，且每次只保持一个周期。可以看到输出相比输入存在 1 到 2 个时钟周期的同步延迟，这是跨时钟域同步的正常代价。仿真结论是：pulse\_sync 能够把 \texttt{NewFrame} 可靠转换为系统时钟域下的 \texttt{ready} 单周期脉冲。
+
+\subsection*{7.5 1000 分频器 pulse\_divider}
+
+音频采样基准为 $48\,\mathrm{kHz}$，而音长单位要求为 $1/48\,\mathrm{s}$，因此需要将 ready 脉冲 1000 分频：
+\begin{equation}
+  f_{\mathrm{beat}}=\frac{48\,000}{1000}=48\,\mathrm{Hz}.
+\end{equation}
+
+\begin{lstlisting}[caption={pulse\_divider 核心代码}]
+// 参数 n 表示分频比，counter_bits 表示计数器位宽
+module pulse_divider #(parameter n = 1000,
+                       parameter counter_bits = 10)(
+    input wire clk, reset, enable,
+    output reg pulse
+);
+    reg [counter_bits-1:0] count;
+
+    always @(posedge clk) begin
+        if (reset) begin
+            count <= {counter_bits{1'b0}};
+            pulse <= 1'b0;
+        end else begin
+            pulse <= 1'b0;
+            if (enable) begin
+                if (count == n - 1) begin
+                    count <= {counter_bits{1'b0}};
+                    pulse <= 1'b1; // 每 n 个 enable 输出一次
+                end else begin
+                    count <= count + 1'b1;
+                end
+            end
+        end
+    end
+endmodule
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab19/pulse_divider波形.png}
+  \caption{pulse\_divider ModelSim 仿真波形}
+  \label{fig:pulse_divider_wave}
+\end{figure}
+
+图 \ref{fig:pulse_divider_wave} 中，测试平台为了加快仿真，将参数设置为 $n=8$、\texttt{counter\_bits=3}。从波形可见，\texttt{enable} 连续输入时，计数器从 0 递增到 7，随后 \texttt{pulse} 输出一个周期高电平并清零重新计数。仿真打印结果显示 32 个 enable 输入产生 4 个 pulse，与 $32/8=4$ 完全一致。结论是：该模块可以通过参数化方式实现实验要求的 1000 分频，也可以在仿真时改用小分频比提高验证效率。
+
+\subsection*{7.6 次顶层 music\_player 集成}
+
+\texttt{music\_player} 将 \texttt{mcu}、\texttt{song\_reader}、\texttt{note\_player}、\texttt{pulse\_sync} 和 \texttt{pulse\_divider} 连接起来，是主实验真正需要仿真的次顶层。核心连接代码如下。
+
+\begin{lstlisting}[caption={music\_player 次顶层核心连接代码}]
+// NewFrame 先同步成 ready，再由 ready 驱动 DDS 采样
+pulse_sync ready_sync_inst(
+    .clk(clk), .reset(reset), .in(NewFrame), .out(ready)
+);
+
+// ready 每 1000 次产生一次 beat；sim=1 时改为 64 分频加速仿真
+pulse_divider #(.n(BEAT_DIVIDER), .counter_bits(BEAT_BITS)) beat_divider_inst(
+    .clk(clk), .reset(reset), .enable(ready), .pulse(beat)
+);
+
+mcu mcu_inst(
+    .clk(clk), .reset(reset), .play_pause(play_pause), .next(next),
+    .song_done(song_done), .play(play), .reset_play(reset_play), .song(song)
+);
+
+song_reader song_reader_inst(
+    .clk(clk), .reset(reset || reset_play), .play(play), .song(song),
+    .note_done(note_done), .song_done(song_done),
+    .note(note), .duration(duration), .new_note(new_note)
+);
+
+note_player note_player_inst(
+    .clk(clk), .reset(reset || reset_play), .play_enable(play),
+    .note_to_load(note), .duration_to_load(duration), .load_new_note(new_note),
+    .beat(beat), .sampling_pulse(ready),
+    .note_done(note_done), .sample(sample), .sample_ready(sample_ready)
+);
+\end{lstlisting}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.95\textwidth]{图片/lab19/music_player波形及局部放大图.png}
+  \caption{music\_player ModelSim 仿真波形及局部放大}
+  \label{fig:music_wave}
+\end{figure}
+
+图 \ref{fig:music_wave} 是次顶层整体仿真结果。复位释放后，\key{play\_pause} 脉冲使 \texttt{play} 变为高电平，系统开始播放第 0 首曲目。随后 \texttt{NewFrame} 周期性输入，经同步后形成 ready，DDS 按 ready 节奏更新 \texttt{sample}。局部放大部分可以观察到，随着 \texttt{song\_reader} 依次输出不同 note，\texttt{note\_player} 产生的正弦采样频率也随之变化，体现出旋律音高的变化。
+
+当音符播放时间达到 duration 对应的 beat 数后，\texttt{note\_done} 触发 \texttt{song\_reader} 读取下一音符，并产生 \texttt{new\_note}。整个链路中 \texttt{new\_note}、\texttt{note\_done}、\texttt{ready}、\texttt{beat} 均为单周期脉冲，模块间握手关系清楚，没有出现多周期误触发或漏触发。由此可得结论：music\_player 次顶层能够正确连接各子模块，实现从按键控制到乐曲读取、音符播放、DDS 采样输出的完整逻辑流程。
+
+\section*{八、Vivado 工程实现}
+
+\subsection*{8.1 DCM 时钟管理 IP 核}
+
+系统需要同时使用 $100\,\mathrm{MHz}$ 系统时钟和 $12.5\,\mathrm{MHz}$ 音频时钟，因此在 Vivado 中配置 DCM\_Audio 时钟管理 IP 核。配置界面如图 \ref{fig:dcm_base}、图 \ref{fig:dcm_freq} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.58\textwidth]{图片/lab19/DCM_Audio 时钟管理 IP 核基础配置.png}
+  \caption{DCM\_Audio 时钟管理 IP 核基础配置}
+  \label{fig:dcm_base}
+  \vspace{0.2em}
+
+  \img[width=0.58\textwidth]{图片/lab19/DCM_Audio IP 核输出时钟频率设置.png}
+  \caption{DCM\_Audio 输出时钟频率设置}
+  \label{fig:dcm_freq}
+\end{figure}
+
+图中配置表明，输入时钟为开发板主时钟，输出一路保持为系统逻辑使用的 \texttt{sys\_clk}，另一路产生音频接口所需的 \texttt{audio\_clk}。由于音频接口与音乐播放逻辑存在跨时钟域信号 \texttt{NewFrame}，因此本设计没有直接将其作为系统时钟域控制信号，而是使用前述 \texttt{pulse\_sync} 做同步化处理。
+
+\subsection*{8.2 RTL 综合原理图与引脚约束}
+
+Vivado 综合后的 RTL 原理图如图 \ref{fig:rtl} 所示。
+
+\begin{figure}[H]
+  \centering
+  \makebox[\textwidth][c]{\img[width=1.10\textwidth]{图片/lab19/RTL综合原理图.png}}
+  \caption{Vivado RTL 综合原理图}
+  \label{fig:rtl}
+\end{figure}
+
+从 RTL 图可以看到，顶层 \texttt{MusicPlayerTop} 下包含 DCM\_Audio、两个按键处理单元、\texttt{music\_player} 和 \texttt{AudioInterface}。这与系统顶层框图一致，说明模块层次和端口连接被 Vivado 正确识别。尤其是 \key{play\_button} 和 \key{next\_button} 均先进入按键处理单元，再进入播放器控制逻辑，符合实验中对机械按键防颤和同步化的要求。
+
+引脚约束如图 \ref{fig:xdc} 所示。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.88\textwidth]{图片/lab19/引脚约束.png}
+  \caption{Vivado 引脚约束}
+  \label{fig:xdc}
+\end{figure}
+
+约束文件将 \key{reset} 连接到中间按键，将 \key{play\_button} 连接到右侧按键，将 \key{next\_button} 连接到下方按键；开发板 LD0--LD3 对应引脚 T14、T15、T16、U16，其中本工程使用 LD0/T14 指示 \texttt{play}，使用 LD2/T16 和 LD3/U16 指示 \texttt{song[1:0]}，LD1/T15 未使用。同时，MCLK、BCLK、LRCLK、DAC\_SDATA、ADC\_SDATA、SCL、SDA 等接口信号约束到 ADAU1761 音频编解码器相关引脚。
+
+\subsection*{8.3 比特流生成}
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.9\textwidth]{图片/lab19/比特流生成完成界面.png}
+  \caption{Vivado 比特流生成完成界面}
+  \label{fig:bitstream}
+\end{figure}
+
+图 \ref{fig:bitstream} 显示 Vivado 已完成 bitstream 生成，说明从 Verilog RTL 到综合、实现和比特流写出的流程已经打通。随后将 bitstream 下载到 Nexys Video 开发板，可以进一步观察按键和 LD 指示的实际响应，验证综合后的硬件行为是否与仿真和约束一致。
+
+\section*{九、FPGA 板级调试与上电验证}
+
+本次上板使用 Nexys Video 开发板进行功能验证。结合引脚约束可知，\key{reset} 接中间按键，\key{play\_button} 接右侧按键，\key{next\_button} 接下方按键。开发板 LD0、LD1、LD2、LD3 分别对应 T14、T15、T16、U16 引脚；本设计只使用 LD0、LD2、LD3，顶层输出 \texttt{play} 接 LD0/T14，\texttt{song[0]} 接 LD2/T16，\texttt{song[1]} 接 LD3/U16。因此，LD0 表示播放器是否处于播放态，LD2 和 LD3 组成二进制曲号显示，LD1 在本实验中不作为状态指示。
+
+\begin{table}[H]
+  \centering
+  \caption{板级 LD 指示含义}
+  \begin{tabular}{cccc}
+    \toprule
+    板级状态 & LD 显示 & 对应端口/引脚 & 状态说明 \\
+    \midrule
+    初始态 & LD0、LD2、LD3 均灭 & \texttt{play/T14=0, song=00} & 上电后未按播放键，系统暂停等待 \\
+    曲目 0 播放 & LD0 亮 & \texttt{play/T14=1, song=00} & 播放第 0 首曲目 \\
+    曲目 1 播放 & LD0、LD2 亮 & \texttt{play=1, song[0]/T16=1} & 播放第 1 首曲目 \\
+    曲目 2 播放 & LD0、LD3 亮 & \texttt{play=1, song[1]/U16=1} & 播放第 2 首曲目 \\
+    曲目 3 暂停 & LD2、LD3 亮，LD0 灭 & \texttt{play=0, song=11} & 曲号保持为第 3 首，当前未播放 \\
+    \bottomrule
+  \end{tabular}
+  \label{tab:board_led}
+\end{table}
+
+上电后未按 \key{play\_button} 时，开发板用户 LD 区域没有出现 LD0、LD2、LD3 点亮，如图 \ref{fig:board_idle} 所示。该现象说明 mcu 复位后保持在暂停/等待状态，\texttt{play} 输出为 0，当前曲号保持初值 00。此状态与前文 ModelSim 仿真中复位后进入 PAUSE 的结论一致。
+
+\begin{figure}[H]
+  \centering
+  \img[width=0.72\textwidth]{图片/上电图片/没有按按钮到的初始态.png}
+  \caption{Nexys Video 上电初始态：LD0、LD2、LD3 均灭，系统暂停等待}
+  \label{fig:board_idle}
+\end{figure}
+
+按下 \key{play\_button} 后，LD0 点亮，说明 \texttt{play} 已经由 mcu 拉高，系统进入播放态。之后每按下一次 \key{next\_button}，\texttt{song[1:0]} 递增一次，LD2、LD3 按二进制曲号显示不同组合。图 \ref{fig:board_song0}--图 \ref{fig:board_song3} 给出了几种典型板级状态，其中图 \ref{fig:board_song3} 为曲号保持在 11 时的暂停状态。
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/上电图片/1.png}
+    \caption{播放状态 1：LD0 亮，\texttt{play=1, song=00}}
+    \label{fig:board_song0}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/上电图片/2.png}
+    \caption{播放状态 2：LD0、LD2 亮，\texttt{play=1, song=01}}
+    \label{fig:board_song1}
+  \end{minipage}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/上电图片/3.png}
+    \caption{播放状态 3：LD0、LD3 亮，\texttt{play=1, song=10}}
+    \label{fig:board_song2}
+  \end{minipage}\hfill
+  \begin{minipage}{0.48\textwidth}
+    \centering
+    \img[width=\textwidth]{图片/上电图片/4.png}
+    \caption{曲目 3 暂停状态：LD2、LD3 亮且 LD0 灭，\texttt{play=0, song=11}}
+    \label{fig:board_song3}
+  \end{minipage}
+\end{figure}
+
+由表 \ref{tab:board_led} 和实物照片可以看出，LD0 能够随播放/暂停状态改变，LD2、LD3 能够随 \key{next\_button} 切换呈现 00、01、10、11 四种曲号组合，说明曲号寄存器递增和输出约束均正确。图 \ref{fig:board_song3} 中 LD0 灭而 LD2、LD3 亮，表示当前曲号仍保持为 \texttt{song=11}，但 \texttt{play} 已经为 0，系统处于第 3 首曲目的暂停状态。这一现象与 mcu 中 \texttt{play} 和 \texttt{song[1:0]} 分别作为播放使能和曲号寄存器输出的设计一致。实际检查时，开发板连接耳机后可以听到播放状态下的音乐输出，\key{play\_button} 可控制开始/暂停，\key{next\_button} 可切换曲号指示，板级现象与仿真分析和引脚约束相符。
+
+\section*{十、实验结论与问题分析}
+
+\subsection*{10.1 实验结论}
+
+本实验完成了以音乐播放器为核心的层次化数字系统设计。实验 11 的按键处理模块解决了 \key{play\_button} 和 \key{next\_button} 的异步输入、防颤和单周期事件识别问题；实验 15 的 DDS 模块解决了音符正弦采样生成问题。主实验进一步将 mcu、song\_reader、note\_player、pulse\_sync、pulse\_divider 和音频接口组合，形成完整播放链路。
+
+从 ModelSim 仿真结果看，各模块输出时序符合设计预期：按键输出无抖动单脉冲；DDS 输出频率随 $K$ 变化；mcu 能正确切换播放/暂停和下一首；song\_reader 能按 ROM 地址顺序读取乐谱；note\_player 能按 duration 控制音长；pulse\_sync 和 pulse\_divider 能生成可靠 ready 与 beat；music\_player 次顶层能够输出随音符变化的正弦采样。Vivado 工程也已经完成 RTL 综合、引脚约束和比特流生成，并通过 Nexys Video 开发板验证了播放/暂停控制、曲号 LD 指示和耳机端音乐输出。
+
+\subsection*{10.2 遇到的问题与解决方法}
+
+\begin{enumerate}
+  \item \textbf{跨时钟域信号不能直接使用。} \texttt{NewFrame} 来自音频接口时钟域，若直接驱动系统时钟域逻辑，可能产生亚稳态或漏采样。因此设计了 \texttt{pulse\_sync}，先同步再做上升沿检测，保证 ready 是系统时钟域内的单周期脉冲。
+  \item \textbf{大分频比不利于仿真。} 实际 beat 需要 1000 分频，完整播放仿真时间较长。为此 \texttt{music\_player} 设置了 \texttt{sim} 参数，仿真时将分频比缩小为 64，同时单独编写 \texttt{pulse\_divider\_tb} 用 $n=8$ 验证分频器逻辑。
+  \item \textbf{同步 ROM 读出需要等待拍。} \texttt{song\_rom}、\texttt{frequency\_rom}、\texttt{sine\_rom} 均采用时钟同步读出。若地址变化后立即使用数据，可能出现时序错位。因此 song\_reader 加入等待状态，DDS 中也用有效标志和象限信息流水线对齐。
+  \item \textbf{按键必须转化为事件脉冲。} 若 \key{play\_button} 长按时直接作为控制输入，mcu 可能在多个时钟周期内反复切换播放状态。通过实验 11 的脉冲转换后，mcu 每次只接收一个 \key{play\_pause} 脉冲，控制逻辑更稳定。
+\end{enumerate}
+
+\section*{十一、思考题}
+
+\subsection*{11.1 主实验：音乐播放器实验思考题}
+
+\begin{enumerate}
+  \item \textbf{在实验中，为什么 \key{next\_button}、\key{play\_pause\_button} 两个按键需要消颤动及同步化处理，而 \key{reset} 按键不需要消颤动及同步化处理？}
+
+  \key{next\_button} 和 \key{play\_pause\_button} 是功能控制按键，它们对应的不是一个持续电平，而是一次明确的控制事件：前者要求曲号加一并重新装载乐曲，后者要求播放状态在播放和暂停之间翻转。机械按键在按下和释放瞬间会产生抖动，如果不经过防颤处理，一次按键可能被识别为多次 \texttt{next} 或多次 \texttt{play\_pause}，从而出现跳过多首歌、播放状态连续翻转等错误现象。同时，这两个按键来自 FPGA 外部，相对于系统时钟是异步输入，直接送入状态机可能造成亚稳态或采样不稳定，因此需要先同步到 \texttt{clk} 时钟域，再通过防颤和脉冲转换生成单周期控制脉冲。
+
+  \key{reset} 的作用不同，它不是用来计数或翻转状态的事件，而是强制系统进入初始状态的控制信号。即使复位按键在按下时存在抖动，多次复位与一次复位在功能上等价，最终都会使 mcu、song\_reader、note\_player 等模块回到确定的初始状态。因此在本实验中，\key{reset} 不需要像播放/切歌按键那样做防颤和单脉冲处理。不过从更严格的工程设计角度看，若复位释放时序要求很高，也可以采用“异步置位、同步释放”或同步复位结构，以进一步减小复位释放瞬间的时序风险。
+
+  \item \textbf{在主控制器 mcu 设计中，是否存在接收不到按键信息？若存在，概率多大？有没有必要修改设计？}
+
+  本实验中 \texttt{mcu} 接收的 \texttt{play\_pause} 和 \texttt{next} 已经不是原始按键电平，而是按键处理模块输出的系统时钟域单周期脉冲。mcu 本身也在同一个 \texttt{clk} 上升沿工作，并且在 \texttt{ST\_PAUSE} 和 \texttt{ST\_PLAY} 状态中都会检测这两个脉冲。因此在正常人手按键操作下，按键信号被采样到的概率很高，基本不会因为跨时钟域或按键抖动而丢失。
+
+  从状态机角度看，理论上仍存在极小概率的“接收不到”情况。例如 mcu 的 \texttt{ST\_NEXT} 状态只保持一个时钟周期，用于产生 \texttt{reset\_play} 并切换到播放状态；如果另一个单周期按键脉冲恰好出现在该周期，当前状态机没有专门处理它，这个脉冲就会被忽略。类似地，复位刚释放或自动回到 \texttt{ST\_RESET} 的短暂周期内，也可能不响应普通播放控制。由于这些不可响应窗口通常只有 $1$ 个系统时钟周期，Nexys Video 的系统时钟为 $100\,\mathrm{MHz}$，一个周期约为 $10\,\mathrm{ns}$；而人工按键操作间隔通常在毫秒级甚至更长，因此相对概率约为
+  \[
+    \frac{10\,\mathrm{ns}}{1\,\mathrm{ms}}\approx 10^{-5}
+  \]
+  或更低，实际使用中几乎不会感知到。
+
+  因此，对本实验的音乐播放器来说，当前 mcu 设计不需要修改，仿真和板级验证也已经说明按键控制能够正常工作。如果设计目标变成高速外部控制、连续命令输入或要求任何控制脉冲绝不丢失，则可以在 mcu 前增加请求寄存器或握手机制：先把 \texttt{next}、\texttt{play\_pause} 锁存为待处理请求，状态机处理完成后再清除请求位。这样可以把“单周期事件”转化为“保持到被响应的请求”，可靠性更高，但硬件逻辑也会更复杂。
+\end{enumerate}
+
+\subsection*{11.2 子实验一：按键同步、防颤与脉冲转换思考题}
+
+\begin{enumerate}
+  \item \textbf{同步器中的锁存器级数与什么因素有关？}
+
+  同步器级数主要与亚稳态消除要求有关，受系统时钟频率、异步输入变化频率、器件触发器特性以及系统允许的失效率影响。级数越多，亚稳态有越长时间恢复，可靠性越高，但会增加延迟。本实验中按键速度很低，采用两级同步通常已经能够满足需要。
+
+  \item \textbf{如果对 UP 开关信号不作脉宽变换处理，会造成什么结果？}
+
+  防颤后的按键电平仍可能持续许多个时钟周期。如果不做脉宽变换，后级电路会把一次长按看成连续多个有效周期，可能导致 LED 多次翻转、计数器连续计数或状态机重复响应。脉宽变换的作用是把一次稳定按键动作压缩为一个时钟周期的事件。
+
+  \item \textbf{为什么系统复位信号 reset 不需要进行防颤动处理？}
+
+  \key{reset} 的作用是让系统回到初始状态，而不是触发一次计数或状态翻转。按键抖动造成的多次复位在功能上等价于持续复位，最终结果仍是系统进入确定初态。因此本实验中不必对 \key{reset} 做防颤动处理。
+\end{enumerate}
+
+\subsection*{11.3 子实验二：DDS 思考题}
+
+\begin{enumerate}
+  \item \textbf{若要实现正弦信号和余弦信号正交两路输出，应怎样修改 Sine ROM？}
+
+  正弦和余弦相差 $90^\circ$，因此可以利用同一张正弦查找表，通过地址偏移得到余弦值。若 Sine ROM 深度为 $N$，正弦输出读取地址 \texttt{addr}，余弦输出可读取
+  \[
+    (\texttt{addr}+N/4)\bmod N
+  \]
+  对应的表项。实现时可以把 Sine ROM 改为双端口 ROM，同时输出 \texttt{sin\_data} 和 \texttt{cos\_data}；也可以在生成 ROM 时直接把每个地址对应的正弦值和余弦值打包存储为两个输出字段。前一种方式复用表项更直接，后一种方式便于时序对齐。
+\end{enumerate}
+
+\section*{十二、思考与体会}
+
+本实验相比前面的单模块实验，更接近一个完整数字系统的实现过程。音乐播放器看起来只是``按键选歌并输出声音''，但真正落到 FPGA 上时，需要同时处理机械按键、防颤同步、主控状态机、ROM 读谱、DDS 波形生成、跨时钟域同步和音频接口输出。实验过程中我也更明显地体会到文件管理的重要性。
+
+整个设计过程体现了自顶而下的数字系统设计方法：先从顶层功能和外设接口出发，确定 \texttt{MusicPlayerTop}、\texttt{music\_player}、\texttt{mcu}、\texttt{song\_reader}、\texttt{note\_player} 等模块边界，再分别完成底层模块并逐级联调。这样做可以把复杂问题拆成可验证的小问题，也便于在出错时沿着层次结构定位问题。相比直接从细节开始写代码，自顶而下的方法更能保证模块接口清晰，减少后期连接时的反复修改。
+
+这也让我更加理解本专业中``数字系统设计''和``信号处理''之间的联系。DDS 部分把音符频率转化为相位累加和正弦采样，本质上是数字信号产生；mcu、song\_reader 和按键处理模块体现的是时序逻辑与嵌入式控制思想；最后通过 ADAU1761 音频接口把数字采样送到实际硬件输出，则把 FPGA 逻辑和真实外设连接起来。这个过程和信息工程中常见的采集、处理、传输、输出链路是相通的。
+
+上板调试也说明，仿真正确只是第一步。ModelSim 中的波形可以帮助检查 \texttt{new\_note}、\texttt{note\_done}、\texttt{ready} 等脉冲是否符合设计，但开发板上的 LD 指示和耳机输出才能说明约束、顶层端口和外设连接是否真正对应。尤其是 LD0 与 LD2、LD3 分别表示播放使能和曲号，这让我更直观地看到控制状态和数据状态可以分开观察。通过这次实验，我对从 Verilog 代码到综合实现再到硬件现象的完整流程有了更清楚的认识。
+
+此外，这次实验也加深了我对同步设计习惯的认识。按键输入、音频接口帧信号和系统时钟并不天然处在同一个时序环境中，必须通过同步、防颤和单周期脉冲等方式转化为状态机可以可靠处理的事件。很多问题在代码层面看起来只是一个条件判断，但在硬件中却对应触发器、组合逻辑和跨时钟域路径。理解这些硬件含义后，再回头看 Verilog 代码，会更加关注信号保持时间、脉冲宽度和模块之间的握手机制，而不只是关注功能描述本身。
+
+\end{document}
