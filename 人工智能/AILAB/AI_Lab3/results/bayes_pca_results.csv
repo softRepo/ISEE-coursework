@@ -1,0 +1,7 @@
+method,accuracy,train_s,test_s,variance
+GaussianNB_raw_784d,70.95%,0.030,0.023,1.0000
+GaussianNB_PCA_20d,78.55%,0.170,0.004,0.6930
+GaussianNB_PCA_50d,73.20%,0.267,0.004,0.8004
+GaussianNB_PCA_100d,64.75%,0.232,0.005,0.8726
+GaussianNB_PCA_150d,61.70%,0.234,0.009,0.9101
+GaussianNB_PCA_200d,59.25%,0.376,0.010,0.9338

@@ -1,0 +1,43 @@
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage[a4paper, margin=2.4cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codekw}{RGB}{31,78,121}
+\definecolor{codestr}{RGB}{0,115,95}
+\definecolor{codecm}{RGB}{100,100,100}
+
+\lstdefinestyle{aicode}{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\bfseries\color{codekw},
+  commentstyle=\itshape\color{codecm},
+  stringstyle=\color{codestr},
+  numbers=left,
+  numberstyle=\tiny\color{codecm},
+  stepnumber=1,
+  numbersep=8pt,
+  frame=single,
+  framerule=0.3pt,
+  backgroundcolor=\color{codebg},
+  breaklines=true,
+  tabsize=4,
+  showstringspaces=false,
+  columns=fullflexible
+}
+
+\lstset{style=aicode}
+\captionsetup{font=small, labelfont=bf}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.25em}

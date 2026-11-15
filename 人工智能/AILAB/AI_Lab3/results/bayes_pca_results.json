@@ -1,0 +1,207 @@
+{
+  "results": [
+    {
+      "method": "GaussianNB_raw_784d",
+      "accuracy": 70.95,
+      "train_time_sec": 0.030136499999571242,
+      "test_time_sec": 0.022652899999229703,
+      "class_stats": {
+        "0": {
+          "correct": 275,
+          "total": 400,
+          "accuracy": 68.75
+        },
+        "3": {
+          "correct": 381,
+          "total": 400,
+          "accuracy": 95.25
+        },
+        "5": {
+          "correct": 125,
+          "total": 400,
+          "accuracy": 31.25
+        },
+        "6": {
+          "correct": 241,
+          "total": 400,
+          "accuracy": 60.25
+        },
+        "7": {
+          "correct": 397,
+          "total": 400,
+          "accuracy": 99.25
+        }
+      }
+    },
+    {
+      "method": "GaussianNB_PCA_20d",
+      "accuracy": 78.55,
+      "train_time_sec": 0.16952429999946617,
+      "test_time_sec": 0.003610200001276098,
+      "class_stats": {
+        "0": {
+          "correct": 306,
+          "total": 400,
+          "accuracy": 76.5
+        },
+        "3": {
+          "correct": 356,
+          "total": 400,
+          "accuracy": 89.0
+        },
+        "5": {
+          "correct": 282,
+          "total": 400,
+          "accuracy": 70.5
+        },
+        "6": {
+          "correct": 253,
+          "total": 400,
+          "accuracy": 63.25
+        },
+        "7": {
+          "correct": 374,
+          "total": 400,
+          "accuracy": 93.5
+        }
+      },
+      "explained_variance_ratio": 0.6930347681045532
+    },
+    {
+      "method": "GaussianNB_PCA_50d",
+      "accuracy": 73.2,
+      "train_time_sec": 0.2670540999988589,
+      "test_time_sec": 0.00413259999913862,
+      "class_stats": {
+        "0": {
+          "correct": 273,
+          "total": 400,
+          "accuracy": 68.25
+        },
+        "3": {
+          "correct": 361,
+          "total": 400,
+          "accuracy": 90.25
+        },
+        "5": {
+          "correct": 230,
+          "total": 400,
+          "accuracy": 57.5
+        },
+        "6": {
+          "correct": 228,
+          "total": 400,
+          "accuracy": 57.0
+        },
+        "7": {
+          "correct": 372,
+          "total": 400,
+          "accuracy": 93.0
+        }
+      },
+      "explained_variance_ratio": 0.8003703951835632
+    },
+    {
+      "method": "GaussianNB_PCA_100d",
+      "accuracy": 64.75,
+      "train_time_sec": 0.2324748000010004,
+      "test_time_sec": 0.005118100001709536,
+      "class_stats": {
+        "0": {
+          "correct": 213,
+          "total": 400,
+          "accuracy": 53.25
+        },
+        "3": {
+          "correct": 355,
+          "total": 400,
+          "accuracy": 88.75
+        },
+        "5": {
+          "correct": 200,
+          "total": 400,
+          "accuracy": 50.0
+        },
+        "6": {
+          "correct": 177,
+          "total": 400,
+          "accuracy": 44.25
+        },
+        "7": {
+          "correct": 350,
+          "total": 400,
+          "accuracy": 87.5
+        }
+      },
+      "explained_variance_ratio": 0.8726198077201843
+    },
+    {
+      "method": "GaussianNB_PCA_150d",
+      "accuracy": 61.7,
+      "train_time_sec": 0.233859099998881,
+      "test_time_sec": 0.009028399999806425,
+      "class_stats": {
+        "0": {
+          "correct": 185,
+          "total": 400,
+          "accuracy": 46.25
+        },
+        "3": {
+          "correct": 349,
+          "total": 400,
+          "accuracy": 87.25
+        },
+        "5": {
+          "correct": 196,
+          "total": 400,
+          "accuracy": 49.0
+        },
+        "6": {
+          "correct": 165,
+          "total": 400,
+          "accuracy": 41.25
+        },
+        "7": {
+          "correct": 339,
+          "total": 400,
+          "accuracy": 84.75
+        }
+      },
+      "explained_variance_ratio": 0.9101015329360962
+    },
+    {
+      "method": "GaussianNB_PCA_200d",
+      "accuracy": 59.25,
+      "train_time_sec": 0.3756364000000758,
+      "test_time_sec": 0.010264499998811516,
+      "class_stats": {
+        "0": {
+          "correct": 158,
+          "total": 400,
+          "accuracy": 39.5
+        },
+        "3": {
+          "correct": 347,
+          "total": 400,
+          "accuracy": 86.75
+        },
+        "5": {
+          "correct": 194,
+          "total": 400,
+          "accuracy": 48.5
+        },
+        "6": {
+          "correct": 153,
+          "total": 400,
+          "accuracy": 38.25
+        },
+        "7": {
+          "correct": 333,
+          "total": 400,
+          "accuracy": 83.25
+        }
+      },
+      "explained_variance_ratio": 0.9338463544845581
+    }
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "results": [
+    {
+      "method": "GaussianNB_raw",
+      "accuracy": 70.95,
+      "train_time_sec": 0.030967499998951098,
+      "test_time_sec": 0.02693600000020524,
+      "class_stats": {
+        "0": {
+          "correct": 275,
+          "total": 400,
+          "accuracy": 68.75
+        },
+        "3": {
+          "correct": 381,
+          "total": 400,
+          "accuracy": 95.25
+        },
+        "5": {
+          "correct": 125,
+          "total": 400,
+          "accuracy": 31.25
+        },
+        "6": {
+          "correct": 241,
+          "total": 400,
+          "accuracy": 60.25
+        },
+        "7": {
+          "correct": 397,
+          "total": 400,
+          "accuracy": 99.25
+        }
+      }
+    },
+    {
+      "method": "BernoulliNB_thr_0.15",
+      "accuracy": 80.15,
+      "train_time_sec": 0.09598639999967418,
+      "test_time_sec": 0.011098700000729878,
+      "class_stats": {
+        "0": {
+          "correct": 309,
+          "total": 400,
+          "accuracy": 77.25
+        },
+        "3": {
+          "correct": 346,
+          "total": 400,
+          "accuracy": 86.5
+        },
+        "5": {
+          "correct": 298,
+          "total": 400,
+          "accuracy": 74.5
+        },
+        "6": {
+          "correct": 266,
+          "total": 400,
+          "accuracy": 66.5
+        },
+        "7": {
+          "correct": 384,
+          "total": 400,
+          "accuracy": 96.0
+        }
+      }
+    },
+    {
+      "method": "BernoulliNB_thr_0.25",
+      "accuracy": 78.0,
+      "train_time_sec": 0.04194830000051297,
+      "test_time_sec": 0.010097099999256898,
+      "class_stats": {
+        "0": {
+          "correct": 297,
+          "total": 400,
+          "accuracy": 74.25
+        },
+        "3": {
+          "correct": 339,
+          "total": 400,
+          "accuracy": 84.75
+        },
+        "5": {
+          "correct": 297,
+          "total": 400,
+          "accuracy": 74.25
+        },
+        "6": {
+          "correct": 244,
+          "total": 400,
+          "accuracy": 61.0
+        },
+        "7": {
+          "correct": 383,
+          "total": 400,
+          "accuracy": 95.75
+        }
+      }
+    },
+    {
+      "method": "BernoulliNB_thr_0.35",
+      "accuracy": 75.44999999999999,
+      "train_time_sec": 0.044251200000871904,
+      "test_time_sec": 0.010071200000311364,
+      "class_stats": {
+        "0": {
+          "correct": 280,
+          "total": 400,
+          "accuracy": 70.0
+        },
+        "3": {
+          "correct": 333,
+          "total": 400,
+          "accuracy": 83.25
+        },
+        "5": {
+          "correct": 293,
+          "total": 400,
+          "accuracy": 73.25
+        },
+        "6": {
+          "correct": 235,
+          "total": 400,
+          "accuracy": 58.75
+        },
+        "7": {
+          "correct": 368,
+          "total": 400,
+          "accuracy": 92.0
+        }
+      }
+    },
+    {
+      "method": "BernoulliNB_thr_0.50",
+      "accuracy": 70.7,
+      "train_time_sec": 0.05233150000094611,
+      "test_time_sec": 0.01018130000011297,
+      "class_stats": {
+        "0": {
+          "correct": 245,
+          "total": 400,
+          "accuracy": 61.25
+        },
+        "3": {
+          "correct": 314,
+          "total": 400,
+          "accuracy": 78.5
+        },
+        "5": {
+          "correct": 302,
+          "total": 400,
+          "accuracy": 75.5
+        },
+        "6": {
+          "correct": 212,
+          "total": 400,
+          "accuracy": 53.0
+        },
+        "7": {
+          "correct": 341,
+          "total": 400,
+          "accuracy": 85.25
+        }
+      }
+    },
+    {
+      "method": "BernoulliNB_thr_0.65",
+      "accuracy": 64.60000000000001,
+      "train_time_sec": 0.0409618000012415,
+      "test_time_sec": 0.009947900000042864,
+      "class_stats": {
+        "0": {
+          "correct": 211,
+          "total": 400,
+          "accuracy": 52.75
+        },
+        "3": {
+          "correct": 293,
+          "total": 400,
+          "accuracy": 73.25
+        },
+        "5": {
+          "correct": 302,
+          "total": 400,
+          "accuracy": 75.5
+        },
+        "6": {
+          "correct": 178,
+          "total": 400,
+          "accuracy": 44.5
+        },
+        "7": {
+          "correct": 308,
+          "total": 400,
+          "accuracy": 77.0
+        }
+      }
+    }
+  ]
+}

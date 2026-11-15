@@ -3,8 +3,8 @@
 Use --tree before Git initialization, --tracked before publishing, and
 --staged in a pre-commit hook. Git modes inspect index blobs, including
 files added with git add --force, rather than trusting .gitignore.
-Only the exact manually audited report PDF and presentation are allowed as
-binary assets.
+Only the exact manually audited lab reports, project report and presentation
+are allowed as binary assets.
 """
 
 from __future__ import annotations
@@ -18,15 +18,46 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 EXACT_PATHS = {
-    ".gitignore", ".gitattributes", "README.md", "PRIVACY.md", "requirements.txt",
-    "docs/report.tex", "models/detectors/README.md", "tools/check_privacy.py",
-    ".githooks/pre-commit", ".github/workflows/privacy.yml",
+    ".gitignore", ".gitattributes", "README.md", "PRIVACY.md",
+    "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
+    "人工智能/README.md",
 }
+FACE_PREFIX = "人工智能/人脸表情识别/"
+LAB_PREFIX = "人工智能/AILAB/"
+LAB_TEXT_PATHS = {'AI_Lab1/README.md',
+ 'AI_Lab1/eight_puzzle.py',
+ 'AI_Lab1/modified_8_puzzle.py',
+ 'AI_Lab1/requirements.txt',
+ 'AI_Lab1/test.py',
+ 'AI_Lab2/README.md',
+ 'AI_Lab2/alpha_beta.py',
+ 'AI_Lab2/compare.py',
+ 'AI_Lab2/debug.py',
+ 'AI_Lab2/requirements.txt',
+ 'AI_Lab3/README.md',
+ 'AI_Lab3/baseline/bayes.py',
+ 'AI_Lab3/baseline/lenet.py',
+ 'AI_Lab3/report/preamble.tex',
+ 'AI_Lab3/report/report.tex',
+ 'AI_Lab3/requirements.txt',
+ 'AI_Lab3/results/bayes_bernoulli_results.csv',
+ 'AI_Lab3/results/bayes_bernoulli_results.json',
+ 'AI_Lab3/results/bayes_pca_results.csv',
+ 'AI_Lab3/results/bayes_pca_results.json',
+ 'AI_Lab3/results/lenet_base_metrics.json',
+ 'AI_Lab3/results/lenet_plus_metrics.json',
+ 'AI_Lab3/src/bayes_bernoulli.py',
+ 'AI_Lab3/src/bayes_pca.py',
+ 'AI_Lab3/src/common_fashion.py',
+ 'AI_Lab3/src/lenet_base.py',
+ 'AI_Lab3/src/lenet_plus.py',
+ 'README.md'}
 PATTERNS = {
     "email address": re.compile(r"(?i)[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}"),
     "mainland mobile number": re.compile(r"(?<!\d)1[3-9]\d{9}(?!\d)"),
     "identity number": re.compile(r"(?<!\d)[1-9]\d{5}(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx](?!\d)"),
     "student identifier": re.compile(r"(?i)(?:学\s*号|student[_ -]?(?:id|number))\s*[:：=]\s*[\"']?[a-z0-9]{6,18}"),
+    "absolute Windows path": re.compile(r"(?i)(?<![a-z])[a-z]:[\\/][^\s\"'<>]+"),
     "personal Windows path": re.compile(r"(?i)(?<![a-z])[a-z]:[\\/](?:users|documents and settings)[\\/][^\s\"'<>]+"),
     "personal Unix path": re.compile(r"/(?:Users|home)/[a-zA-Z0-9_.-]+/"),
     "GitHub credential": re.compile(r"(?:gh[pousr]_[a-zA-Z0-9]{30,}|github_pat_[a-zA-Z0-9_]{30,})"),
@@ -39,10 +70,11 @@ PATTERNS = {
 MAX_TEXT_SIZE = 2 * 1024 * 1024
 # Updating these files requires another content and metadata review before
 # replacing a digest. Other binary files and modified bytes remain blocked.
-APPROVED_BINARIES = {
-    "docs/report.pdf": "3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6",
-    "docs/presentation.pptx": "755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2",
-}
+APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'fe3a59f2751e0ab99f5b0a0c80004924ee68dc71e2c28dd869dfa7e773b28747',
+ '人工智能/AILAB/AI_Lab2/report/report.pdf': '23dfa679a8bc7e2378cd418beb1b640581dbb5939dd1c5bde22946b35b31af44',
+ '人工智能/AILAB/AI_Lab3/report/report.pdf': '17f1cd1232c2568329b2154f1138aed8079df569b5931610daaa8c257056c451',
+ '人工智能/人脸表情识别/docs/presentation.pptx': '755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2',
+ '人工智能/人脸表情识别/docs/report.pdf': '3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6'}
 
 
 def allowed_path(name: str) -> bool:
@@ -51,11 +83,19 @@ def allowed_path(name: str) -> bool:
         return False
     if name in EXACT_PATHS or name in APPROVED_BINARIES:
         return True
+    if name.startswith(LAB_PREFIX):
+        return name[len(LAB_PREFIX):] in LAB_TEXT_PATHS
+    if not name.startswith(FACE_PREFIX):
+        return False
+    path = PurePosixPath(name[len(FACE_PREFIX):])
+    if str(path) in {"README.md", "requirements.txt", "docs/report.tex", "models/detectors/README.md"}:
+        return True
     if path.suffix == ".py" and len(path.parts) == 1:
         return True
     if path.suffix == ".py" and len(path.parts) == 2 and path.parts[0] in {"models", "utils"}:
         return True
     return len(path.parts) == 3 and path.parts[:2] == ("docs", "results") and path.suffix in {".txt", ".csv", ".md"}
+
 
 
 def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:

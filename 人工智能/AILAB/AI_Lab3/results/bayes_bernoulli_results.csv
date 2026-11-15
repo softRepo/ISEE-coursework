@@ -1,0 +1,7 @@
+method,accuracy,train_s,test_s
+GaussianNB_raw,70.95%,0.031,0.027
+BernoulliNB_thr_0.15,80.15%,0.096,0.011
+BernoulliNB_thr_0.25,78.00%,0.042,0.010
+BernoulliNB_thr_0.35,75.45%,0.044,0.010
+BernoulliNB_thr_0.50,70.70%,0.052,0.010
+BernoulliNB_thr_0.65,64.60%,0.041,0.010

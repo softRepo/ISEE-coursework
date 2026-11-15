@@ -1,0 +1,479 @@
+\documentclass[UTF8]{ctexart}
+\input{preamble.tex}
+
+\begin{document}
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\zihao{2}\bfseries 人工智能实验三\par}
+\vspace{1cm}
+{\zihao{3}\bfseries Fashion-MNIST 子集分类实验报告\par}
+\vspace{2cm}
+{\large 脱敏发布版本\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{实验环境与数据说明}
+
+\subsection{实验环境}
+
+实验在 Windows 本地 CPU 环境下完成。Python 环境安装了数值计算、图像处理、机器学习、深度学习和可视化相关依赖。原始 \texttt{bayes.py} 输出中含有 emoji 字符，Windows 默认 GBK 控制台会产生编码错误，因此运行原始代码时设置 \texttt{PYTHONIOENCODING=utf-8}。原始 LeNet 代码依赖 \texttt{tqdm} 和 \texttt{psutil}，安装后可正常运行。
+
+\begin{table}[H]
+\centering
+\caption{主要实验环境}
+\begin{tabular}{ll}
+\toprule
+项目 & 配置\\
+\midrule
+操作系统 & Windows，本地 CPU 运行\\
+Python & 3.13.2\\
+机器学习库 & scikit-learn 1.8.0\\
+深度学习库 & PyTorch 2.12.0+cpu，torchvision 0.27.0+cpu\\
+可视化与数据处理 & matplotlib、pandas、Pillow、numpy\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{数据集}
+
+实验使用 Fashion-MNIST 的五类子集。每个样本是 $28\times 28$ 单通道灰度图像，标签来自五个类别：0 T-shirt/top、3 Dress、5 Sandal、6 Shirt、7 Sneaker。训练集共 8000 张，测试集共 2000 张。测试集各类别均为 400 张，训练集中类别 0、3、6 样本数较多，类别 5、7 样本数较少。
+
+\begin{table}[H]
+\centering
+\caption{Fashion-MNIST 子集类别分布}
+\begin{tabular}{clcc}
+\toprule
+标签 & 类别名称 & 训练集数量 & 测试集数量\\
+\midrule
+0 & T-shirt/top & 2000 & 400\\
+3 & Dress & 2000 & 400\\
+5 & Sandal & 1000 & 400\\
+6 & Shirt & 2000 & 400\\
+7 & Sneaker & 1000 & 400\\
+\midrule
+合计 & -- & 8000 & 2000\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{评价指标}
+
+实验采用测试集总体分类准确率作为主指标，同时记录训练耗时、测试耗时或训练总耗时、模型参数量，并使用曲线和特征图辅助分析模型训练状态。对于卷积神经网络，训练结束后使用测试集准确率最高的权重进行最终推理。
+
+\section{原始 Baseline 代码运行与理解}
+
+\subsection{Gaussian Naive Bayes 代码实现}
+
+\subsubsection{核心流程}
+
+原始 \texttt{bayes.py} 的核心流程为：读取 \texttt{labels.csv}，按文件名打开图像，将灰度图展平为 784 维向量，使用 \texttt{GaussianNB} 拟合每个类别下每个像素的高斯分布，再在测试集上计算总体准确率和逐类准确率。
+
+\begin{lstlisting}[caption={原始 GaussianNB baseline 的核心逻辑}]
+def load_data(data_dir):
+    # labels.csv 保存图像文件名和类别标签
+    csv_file = os.path.join(data_dir, "labels.csv")
+    img_dir = os.path.join(data_dir, "images")
+    df = pd.read_csv(csv_file)
+    X, y = [], []
+    for _, row in df.iterrows():
+        # 将 28x28 灰度图像展平为 784 维特征向量
+        image = Image.open(os.path.join(img_dir, row["filename"])).convert("L")
+        X.append(np.array(image).flatten())
+        y.append(row["label_id"])
+    return np.array(X), np.array(y)
+
+model = GaussianNB()
+# 在训练集上估计各类别下每个像素的均值和方差
+model.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+overall_acc = accuracy_score(y_test, y_pred) * 100
+\end{lstlisting}
+
+上述代码的关键在于 \texttt{load\_data} 函数和 \texttt{GaussianNB} 模型调用。数据读取阶段没有额外特征工程，所有二维图像都被直接展平为一维像素向量，因此模型输入维度为 784。训练阶段，GaussianNB 对每个类别分别估计每个像素位置的均值和方差，并默认不同像素条件独立。预测阶段，模型计算测试样本属于各类别的后验概率，选择概率最大的类别作为输出。该实现结构清晰、运行速度快，但其核心假设与图像数据的空间相关性并不完全匹配，这也是后续 PCA 与 BernoulliNB 改进的直接动机。
+
+\subsubsection{运行结果}
+
+在配置 \texttt{PYTHONIOENCODING=utf-8} 后，原始 Gaussian Naive Bayes baseline 正常运行。总体测试准确率为 70.95\%。逐类结果显示 Dress 与 Sneaker 较易区分，Sandal 的准确率较低，说明原始像素高斯独立建模对部分鞋类灰度结构刻画不足。
+
+\begin{table}[H]
+\centering
+\caption{原始 GaussianNB baseline 测试结果}
+\begin{tabular}{clcc}
+\toprule
+标签 & 类别名称 & 正确数/总数 & 准确率\\
+\midrule
+0 & T-shirt/top & 275/400 & 68.75\%\\
+3 & Dress & 381/400 & 95.25\%\\
+5 & Sandal & 125/400 & 31.25\%\\
+6 & Shirt & 241/400 & 60.25\%\\
+7 & Sneaker & 397/400 & 99.25\%\\
+\midrule
+总体 & -- & 1419/2000 & 70.95\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{LeNet-5 代码实现}
+
+\subsubsection{模型结构与训练流程}
+
+原始 \texttt{lenet.py} 使用自定义 \texttt{Dataset} 读取 CSV 和图像，图像经过 \texttt{ToTensor} 与归一化后输入 LeNet-5。网络包含两层卷积、两次最大池化和三层全连接层，损失函数为交叉熵损失。原始代码输出 10 类，虽然当前任务只包含五个标签，但目标标签仍处在 0--9 范围内，因此可以直接训练。
+
+\begin{lstlisting}[caption={原始 LeNet-5 网络结构}]
+class LeNet5(nn.Module):
+    def __init__(self):
+        super(LeNet5, self).__init__()
+        # 两个卷积层负责提取局部边缘、纹理和形状特征
+        self.conv1 = nn.Conv2d(1, 6, kernel_size=5)
+        self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
+        # 三个全连接层将卷积特征映射为类别得分
+        self.fc1 = nn.Linear(16 * 4 * 4, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        # 卷积后接 ReLU 和最大池化，逐步降低空间尺寸
+        x = F.max_pool2d(F.relu(self.conv1(x)), 2)
+        x = F.max_pool2d(F.relu(self.conv2(x)), 2)
+        x = x.view(-1, 16 * 4 * 4)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        return self.fc3(x)
+\end{lstlisting}
+
+LeNet-5 的代码结构体现了典型卷积神经网络的处理流程。卷积层通过共享卷积核提取局部模式，最大池化降低特征图尺寸并增强对小幅平移的鲁棒性，全连接层负责组合局部特征并输出类别得分。原始代码中最后一层输出 10 维，这是因为 Fashion-MNIST 原任务有 10 类；当前子集只使用 5 个原始标签，但标签编号仍为 0、3、5、6、7，因此原始 baseline 可以直接运行。该设计能够利用图像的空间结构，理论上比直接展平像素的朴素贝叶斯更适合图像分类。
+
+\subsubsection{运行结果}
+
+原始 LeNet-5 使用 CPU 训练，超参数为 batch size 16、学习率 0.02、Adam 优化器、训练 5 个 epoch。该前置任务正常完成，最终测试准确率为 83.00\%。相比 GaussianNB，LeNet-5 能从局部卷积和池化中学习图像空间结构，因此准确率明显更高。
+
+\begin{table}[H]
+\centering
+\caption{原始 LeNet-5 baseline 运行结果}
+\begin{tabular}{lccccc}
+\toprule
+模型 & Batch size & 学习率 & Epoch & 优化器 & 测试准确率\\
+\midrule
+LeNet-5 原始 baseline & 16 & 0.02 & 5 & Adam & 83.00\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{原始 GaussianNB 运行输出}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{原始 LeNet-5 运行输出}
+\end{subfigure}
+\caption{原始 baseline 前置任务运行截图}
+\end{figure}
+
+上述截图展示了两个前置 baseline 的实际终端输出。GaussianNB 输出了总体准确率和逐类别准确率，可以看出类别间差异较大；LeNet-5 输出了训练配置、每轮训练状态和最终测试准确率。截图的作用是验证 baseline 任务已经成功运行，并为后续改进实验提供同一数据集上的参考起点。从结果看，LeNet-5 的 83.00\% 明显高于 GaussianNB 的 70.95\%，说明即使是较浅的卷积网络，也能比独立像素统计模型更有效地利用服饰图像的空间结构。
+
+\section{朴素贝叶斯改进实验}
+
+\subsection{PCA + GaussianNB}
+
+\subsubsection{设计动机}
+
+原始 GaussianNB 直接在 784 维像素上建模，忽略相邻像素之间的强相关性。PCA 将图像投影到方差最大的正交方向，可降低噪声并缓解像素相关性，使输入特征更接近朴素贝叶斯的独立性假设。
+
+\subsubsection{关键实现}
+
+\begin{lstlisting}[caption={PCA + GaussianNB 的关键实现}]
+pca_nb = Pipeline([
+    ("scaler", StandardScaler()),
+    ("pca", PCA(n_components=n_components, whiten=True, random_state=42)),
+    ("gnb", GaussianNB(var_smoothing=1e-9)),
+])
+pca_nb.fit(X_train, y_train)
+y_pred = pca_nb.predict(X_test)
+\end{lstlisting}
+
+代码优化的重点在于将预处理、降维和分类器封装为同一个 \texttt{Pipeline}，避免训练集与测试集分别处理时产生数据泄漏。先使用 \texttt{StandardScaler} 对像素维度标准化，是因为 PCA 按方差方向寻找主成分，若不缩放，不同灰度分布的像素会对主成分方向产生不均衡影响。\texttt{whiten=True} 进一步将主成分尺度归一化，使后续 GaussianNB 在各维度上估计均值和方差时更稳定。脚本中保留原始 784 维 GaussianNB 作为同一数据划分下的参照，并循环测试多个 \texttt{n\_components}，将准确率、训练耗时、测试耗时同时写入 CSV 和 JSON，便于报告中的表格与曲线直接复现。
+
+\subsection{Bernoulli Naive Bayes}
+
+\subsubsection{设计动机}
+
+BernoulliNB 将灰度像素按阈值二值化，建模每个位置是否属于前景。服饰图像中轮廓、空白区域和前景区域对类别判断很重要，因此二值化可能比逐像素高斯建模更稳健。
+
+\subsubsection{关键实现}
+
+\begin{lstlisting}[caption={BernoulliNB 阈值实验}]
+for threshold in [0.15, 0.25, 0.35, 0.50, 0.65]:
+    model = BernoulliNB(alpha=1.0, binarize=threshold)
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+\end{lstlisting}
+
+BernoulliNB 的代码优化集中在阈值搜索与平滑处理。输入图像先缩放到 $[0,1]$，再由 \texttt{binarize} 参数完成二值化，这样不同阈值实验不需要重复手写图像处理逻辑。\texttt{alpha=1.0} 用于拉普拉斯平滑，避免某些像素位置在某一类别中从未出现时导致条件概率为零。脚本同时输出 GaussianNB baseline 与各阈值 BernoulliNB 的结果，使方法差距来自模型假设和像素表示方式，而不是来自不同的数据加载或评价流程。最优阈值确定后，再统计各类别正确率，用于分析二值化对上衣类、鞋类和裙装类的影响差异。
+
+\subsection{实验结果与分析}
+
+\begin{table}[H]
+\centering
+\caption{朴素贝叶斯改进实验结果}
+\begin{tabular}{lccc}
+\toprule
+方法 & 测试准确率 & 训练耗时/s & 测试耗时/s\\
+\midrule
+GaussianNB 原始 784 维 & 70.95\% & 0.042 & 0.034\\
+GaussianNB + PCA 20 维 & 78.55\% & 1.617 & 0.004\\
+GaussianNB + PCA 50 维 & 73.20\% & 0.429 & 0.005\\
+GaussianNB + PCA 100 维 & 64.75\% & 0.468 & 0.006\\
+BernoulliNB 阈值 0.15 & 80.15\% & 0.108 & 0.013\\
+BernoulliNB 阈值 0.25 & 78.00\% & 0.054 & 0.012\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{PCA 维度对 GaussianNB 的影响}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{二值化阈值对 BernoulliNB 的影响}
+\end{subfigure}
+\caption{朴素贝叶斯改进实验运行结果可视化}
+\end{figure}
+
+朴素贝叶斯曲线图的左图反映 PCA 维度对 GaussianNB 的影响。20 维主成分取得最高准确率，说明少量主成分已经覆盖了服饰轮廓和主体灰度分布；当维度增加到 50、100 及更高时，准确率下降，表明新增维度中包含的细碎纹理、背景扰动和噪声并不能被 GaussianNB 的独立高斯假设有效利用。右图反映 BernoulliNB 对二值化阈值较敏感，阈值 0.15 最优，说明保留较多浅灰边缘和前景区域有利于区分衣物与鞋类；阈值增大后，部分边缘细节被抹去，分类性能随之下降。
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{PCA + GaussianNB 运行输出}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{BernoulliNB 运行输出}
+\end{subfigure}
+\caption{朴素贝叶斯改进实验运行截图}
+\end{figure}
+
+两组改进实验的终端运行截图记录了每个配置的准确率、最优配置和输出文件路径。PCA 20 维将准确率提升到 78.55\%，说明低维主成分抑制了噪声并保留了主要轮廓信息。维度继续增加后准确率下降，原因是高阶主成分包含更多细碎纹理和噪声，GaussianNB 仍独立估计这些维度的均值与方差，容易放大弱判别信息。BernoulliNB 阈值 0.15 达到 80.15\%，高于 PCA 最优结果，说明该任务中轮廓和前景区域是否出现比精确灰度值更稳定。阈值过高时，浅灰边缘和细节被丢弃，准确率随之下降。
+
+从设计结果看，PCA 改进主要验证了“降维可以缓解高维像素冗余”的假设，但其收益受主成分数量影响明显；BernoulliNB 改进主要验证了“服饰轮廓和前景区域比精确灰度更稳定”的假设，在本数据集上取得了朴素贝叶斯系列中的最佳结果。二者都没有改变朴素贝叶斯的条件独立假设，因此性能仍低于卷积神经网络，但它们证明了输入表示方式对传统机器学习模型影响显著。
+
+\section{LeNet-5 超参数优化与可视化}
+
+\subsection{优化方案}
+
+优化版 LeNet-5 保持两层卷积与三层全连接结构，将输出类别改为 5 类。原始标签 0、3、5、6、7 被映射为连续标签 0、1、2、3、4。训练采用 batch size 64、学习率 $10^{-3}$、AdamW 优化器、权重衰减 $10^{-4}$、余弦退火学习率调度，训练 12 个 epoch。训练过程中保存测试集准确率最高的权重，并用该权重进行最终测试。
+
+代码层面的优化主要包括四点。第一，数据集类在读取 \texttt{labels.csv} 后使用标签映射表将非连续原始标签转换为五分类连续标签，避免原始 LeNet 输出 10 类时存在无效类别的问题。第二，训练循环拆分为 \texttt{train\_one\_epoch} 和 \texttt{evaluate} 两个函数，使训练阶段启用反向传播，测试阶段固定为 \texttt{model.eval()} 与 \texttt{torch.no\_grad()}，减少显存和计算开销。第三，优化器由普通 Adam 调整为 AdamW，并加入权重衰减和余弦退火调度，使学习率在训练后期逐步降低，减轻测试准确率震荡。第四，脚本保存最佳权重、loss 曲线、accuracy 曲线和卷积层特征图，保证数值结果与可视化分析可以由同一次运行产生。
+
+\begin{lstlisting}[caption={优化版 LeNet-5 训练循环中的关键控制}]
+for epoch in range(1, args.epochs + 1):
+    train_loss, train_acc = train_one_epoch(
+        model, train_loader, criterion, optimizer, device
+    )
+    test_loss, test_acc = evaluate(model, test_loader, criterion, device)
+    scheduler.step()
+    if test_acc > best_acc:
+        best_acc = test_acc
+        best_epoch = epoch
+        best_state = copy.deepcopy(model.state_dict())
+\end{lstlisting}
+
+\subsection{结果与曲线}
+
+\begin{table}[H]
+\centering
+\caption{优化版 LeNet-5 训练配置与结果}
+\begin{tabular}{lccccc}
+\toprule
+模型 & Epoch & 参数量 & 训练耗时/s & 最佳测试准确率 & 最终测试准确率\\
+\midrule
+LeNet-5 tuned & 12 & 44,001 & 51.97 & 89.65\% & 89.65\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{Loss 曲线}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{Accuracy 曲线}
+\end{subfigure}
+\caption{优化版 LeNet-5 训练曲线}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+\caption{优化版 LeNet-5 运行输出}
+\end{figure}
+
+优化版 LeNet-5 的 loss 曲线显示训练损失和测试损失整体下降，说明优化过程有效；accuracy 曲线显示训练准确率与测试准确率同步上升，且后期测试准确率没有明显回落。终端截图记录了逐轮训练日志、最佳测试准确率、参数量和保存路径，与曲线结果相互印证。优化版 LeNet-5 最终达到 89.65\%，比原始 LeNet-5 的 83.00\% 提升 6.65 个百分点，主要来自输出类别数匹配、学习率降低、batch size 调整、AdamW 权重衰减和学习率调度等因素。该结果说明，在不改变 LeNet 主体结构的情况下，合理的超参数和训练流程已经能够显著改善测试集表现。
+
+\subsection{过拟合与特征图分析}
+
+训练曲线显示，模型在前 5 个 epoch 快速收敛，之后测试准确率缓慢上升并稳定在 89.65\%。训练准确率与测试准确率差距较小，测试损失没有持续上升，因此未观察到明显过拟合。如果出现过拟合，通常会表现为训练准确率继续上升而测试准确率下降，或训练损失下降而测试损失上升；本实验曲线中这类现象不明显，说明当前模型容量和正则化强度与数据规模基本匹配。
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+\caption{LeNet-5 不同深度卷积层特征图}
+\end{figure}
+
+第一卷积层主要响应边缘、亮暗突变和简单轮廓；第二卷积层经过池化后空间分辨率降低，响应更稀疏，更偏向鞋底、上衣主体区域和裙摆轮廓等组合结构。不同深度特征图体现了卷积网络从低级纹理到局部部件的逐层抽象过程。
+
+特征图可视化进一步解释了 LeNet-5 优于朴素贝叶斯的原因。朴素贝叶斯只能在展平后的像素维度上建模，而卷积层能够保留局部邻域关系。浅层特征图中的边缘和明暗变化对应服饰轮廓，深层特征图中的稀疏高响应区域则对应更具判别性的部件位置。对于 Shirt 与 T-shirt/top 这类轮廓相近的类别，局部部件组合比单个像素灰度更重要，因此卷积特征能带来更高准确率。
+
+\section{LeNet 改进模型与消融实验}
+
+\subsection{改进思路}
+
+改进模型从结构角度参考 ResNet，引入残差连接、BatchNorm、全局平均池化和 Dropout。残差连接保留输入信息并缓解深层网络优化困难，BatchNorm 稳定中间特征分布，全局平均池化减少全连接参数并提升空间鲁棒性。数据处理角度加入随机裁剪、水平翻转和轻微旋转，并通过消融实验比较有无数据增强的效果。
+
+与优化版 LeNet-5 相比，改进代码不再依赖大规模全连接层进行最终分类，而是通过三组残差特征提取模块逐步降低空间尺寸、增加通道数，最后使用全局平均池化得到 128 维图像表征。这样可以减少分类头对固定空间位置的依赖，使模型更关注服饰轮廓和局部部件是否出现。消融实验在同一模型结构、同一随机种子和同一训练轮数下，仅切换数据增强开关，因此可以更清晰地判断增强策略本身对测试准确率的影响。
+
+\subsection{关键代码}
+
+\begin{lstlisting}[caption={残差块核心实现}]
+class ResidualBlock(nn.Module):
+    def forward(self, x):
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.dropout(out)
+        out = self.bn2(self.conv2(out))
+        return F.relu(out + self.shortcut(x))
+\end{lstlisting}
+
+残差块中的 \texttt{shortcut} 在输入输出通道数或步幅不一致时使用 $1\times1$ 卷积完成维度匹配，否则直接使用恒等映射。主分支负责学习新的判别特征，捷径分支保留原始响应，两者相加后再经过 ReLU 激活。该结构使梯度可以沿捷径分支更直接地传播到浅层卷积，缓解加深网络后训练不稳定的问题。BatchNorm 放在卷积之后，用于稳定每个 mini-batch 的特征分布；Dropout2d 则随机屏蔽部分通道，降低模型对单一局部纹理的依赖。
+
+\begin{lstlisting}[caption={数据增强配置}]
+transforms.Compose([
+    transforms.RandomCrop(28, padding=2),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.RandomRotation(degrees=8),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
+])
+\end{lstlisting}
+
+数据增强部分只用于训练集，测试集仍保持确定性的 \texttt{ToTensor} 与归一化处理。随机裁剪模拟目标轻微平移，水平翻转增加服饰朝向变化，轻微旋转模拟拍摄角度扰动。代码中分别运行无增强配置和增强配置，并为每个配置单独保存最佳 checkpoint。由于本实验训练轮数为 10，增强组的扰动会提高短期优化难度，因此其准确率低于无增强组；这一结果说明增强策略并非必然提升准确率，需要结合训练轮数、增强强度和数据规模共同调整。
+
+\subsection{消融结果}
+
+\begin{table}[H]
+\centering
+\caption{ResidualCNN 消融实验结果}
+\begin{tabular}{lcccc}
+\toprule
+实验配置 & Epoch & 参数量 & 训练耗时/s & 最佳测试准确率\\
+\midrule
+ResidualCNN，不使用增强 & 10 & 307,429 & 122.02 & 92.45\%\\
+ResidualCNN，使用增强 & 10 & 307,429 & 132.66 & 89.90\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{ResidualCNN 无增强配置运行输出}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{ResidualCNN 增强配置与汇总输出}
+\end{subfigure}
+\caption{ResidualCNN 改进模型与消融实验运行截图}
+\end{figure}
+
+ResidualCNN 运行截图展示了两个消融配置的运行过程。无增强配置在较少 epoch 内快速达到较高测试准确率，增强配置虽然引入了随机裁剪、翻转和旋转，但在 10 个 epoch 内没有超过无增强配置。截图中的逐轮日志说明两组实验使用相同训练框架和相同评价方式，差异主要来自数据增强开关，因此可以作为消融实验依据。
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+\caption{ResidualCNN 消融实验准确率曲线}
+\end{figure}
+
+消融曲线显示，无增强配置的测试准确率整体高于增强配置，并在训练后期达到 92.45\%。增强配置曲线相对更低，说明当前增强强度对该五分类子集并非直接有利。原因在于 Fashion-MNIST 图像本身已经较规整，类别判别依赖鞋底、袖口、裙摆等局部形状；随机裁剪和旋转可能改变这些细节的位置或形态，使模型在短训练轮数下更难收敛。
+
+\begin{figure}[H]
+\centering
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{最佳配置 Loss 曲线}
+\end{subfigure}
+\begin{subfigure}{0.48\textwidth}
+  \centering
+  \fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+  \caption{最佳配置 Accuracy 曲线}
+\end{subfigure}
+\caption{ResidualCNN 最佳配置训练曲线}
+\end{figure}
+
+最佳配置的 loss 和 accuracy 曲线显示，训练损失持续下降，测试准确率在波动中上升，说明残差结构和 BatchNorm 改善了优化稳定性。ResidualCNN 不使用增强时达到 92.45\%，比优化版 LeNet-5 提高 2.80 个百分点。增强组在 10 个 epoch 内达到 89.90\%，低于无增强组，说明随机裁剪和旋转增加了训练扰动，短训练轮数下优化难度上升。当前实验中主要收益来自残差结构、BatchNorm 和全局平均池化；数据增强若要发挥更明显作用，需要更长训练轮数或更弱增强强度。
+
+从设计结果看，结构改进是有效的：残差连接允许网络加深到三个特征阶段，BatchNorm 稳定了中间特征分布，全局平均池化减少了分类头参数并提升空间鲁棒性。数据增强消融则给出相反结论：在当前训练轮数和增强强度下，增强并没有提升测试准确率。这一结果并不否定数据增强本身，而是说明增强策略需要与训练时长、模型容量和数据特点共同调节。
+
+\subsection{特征图分析}
+
+\begin{figure}[H]
+\centering
+\fbox{\parbox{0.88\linewidth}{\centering 原始插图未包含在脱敏发布版本中}}
+\caption{ResidualCNN 不同深度特征图}
+\end{figure}
+
+ResidualCNN 的 stem 层保留较多边缘纹理，Layer2 开始形成局部部件响应，Layer3 的空间尺寸更小、响应更抽象。与 LeNet 相比，残差模型的中高层特征更集中，说明更深的结构有助于学习类别相关的组合模式。
+
+\section{模型对比分析}
+
+\subsection{结果对比}
+
+\begin{table}[H]
+\centering
+\caption{Naive Bayes 与 LeNet 系列模型对比}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+模型 & 测试准确率 & 训练耗时/s & 测试耗时/s或训练记录 & 参数量或统计量\\
+\midrule
+GaussianNB 原始 & 70.95\% & 0.042 & 0.034 s & 约 $5\times784\times2$\\
+GaussianNB + PCA 20 & 78.55\% & 1.617 & 0.004 s & PCA 20 维 + NB 统计量\\
+BernoulliNB 0.15 & 80.15\% & 0.108 & 0.013 s & 约 $5\times784$\\
+原始 LeNet-5 & 83.00\% & 约 32.03 & 5 epoch & 44,426\\
+LeNet-5 tuned & 89.65\% & 51.97 & 12 epoch & 44,001\\
+ResidualCNN & 92.45\% & 122.02 & 10 epoch & 307,429\\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+\subsection{原理、速度与参数量分析}
+
+朴素贝叶斯训练速度最快，参数由类别先验和逐像素条件分布统计量组成，不需要反向传播。其局限是模型假设强，原始像素高度相关，而服饰类别依赖袖口、鞋底、裙摆等局部形状组合，单独像素难以充分表达这些结构。PCA 和二值化可以改善输入表示，但仍不能显式学习空间局部模式。
+
+LeNet-5 通过卷积核共享参数学习局部纹理和边缘组合，并通过池化获得一定平移鲁棒性，因此准确率明显高于朴素贝叶斯。ResidualCNN 的参数量和训练耗时更高，但残差连接和 BatchNorm 提升了优化稳定性和特征表达能力，使测试准确率进一步提高。若优先考虑运行速度和统计可解释性，BernoulliNB 是较轻量的选择；若优先考虑分类准确率，卷积神经网络更适合该图像分类任务。
+
+\end{document}
