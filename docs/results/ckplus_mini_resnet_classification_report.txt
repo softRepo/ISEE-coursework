@@ -1,0 +1,17 @@
+CK+ 外部泛化测试分类报告
+模型名称：mini_resnet
+Usage 筛选：all
+说明：已删除 emotion=7 的 Contempt 样本，仅保留 0 到 6 类。
+Accuracy：0.7140
+Macro Precision：0.6063
+Macro Recall：0.5787
+Macro F1-score：0.5275
+
+类别             Precision      Recall    F1-score   Support
+Angry             0.2951      0.4000      0.3396        45
+Disgust           0.9231      0.2034      0.3333        59
+Fear              0.2105      0.1600      0.1818        25
+Happy             0.8333      0.9420      0.8844        69
+Sad               0.1290      0.7143      0.2186        28
+Surprise          0.9474      0.8675      0.9057        83
+Neutral           0.9060      0.7639      0.8289       593

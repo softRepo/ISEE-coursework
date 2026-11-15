@@ -1,0 +1,20 @@
+RAF-DB Compound 复合表情 RGB 模型测试集分类报告
+模型名称：compound_rgb_mini_resnet
+说明：本实验为 11 类复合表情识别扩展实验，不替代原有 7 类基本表情识别。
+Accuracy：0.5581
+Macro Precision：0.4365
+Macro Recall：0.3793
+Macro F1-score：0.3889
+
+类别                英文名称                           Precision      Recall    F1-score   Support
+开心-惊讶             Happily Surprised                 0.6736      0.7185      0.6953       135
+开心-厌恶             Happily Disgusted                 0.3953      0.3617      0.3778        47
+悲伤-恐惧             Sadly Fearful                     0.1176      0.0909      0.1026        22
+悲伤-愤怒             Sadly Angry                       0.2174      0.1515      0.1786        33
+悲伤-惊讶             Sadly Surprised                   0.3333      0.1111      0.1667        18
+悲伤-厌恶             Sadly Disgusted                   0.5505      0.7730      0.6431       141
+恐惧-愤怒             Fearfully Angry                   0.7778      0.4242      0.5490        33
+恐惧-惊讶             Fearfully Surprised               0.5915      0.7241      0.6512       116
+愤怒-惊讶             Angrily Surprised                 0.2857      0.1053      0.1538        38
+愤怒-厌恶             Angrily Disgusted                 0.6082      0.5977      0.6029       174
+厌恶-惊讶             Disgustedly Surprised             0.2500      0.1143      0.1569        35

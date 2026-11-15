@@ -1,0 +1,9 @@
+RAF-DB 各类别识别效果统计
+说明：类别顺序为 FER2013 标签顺序，RAF-DB 标签已完成映射。
+Angry：样本数 162，正确 90，Precision 0.3093，Recall 0.5556，F1 0.3974
+Disgust：样本数 160，正确 11，Precision 0.3548，Recall 0.0688，F1 0.1152
+Fear：样本数 74，正确 16，Precision 0.1684，Recall 0.2162，F1 0.1893
+Happy：样本数 1185，正确 918，Precision 0.8300，Recall 0.7747，F1 0.8014
+Sad：样本数 478，正确 323，Precision 0.3868，Recall 0.6757，F1 0.4920
+Surprise：样本数 329，正确 46，Precision 0.8519，Recall 0.1398，F1 0.2402
+Neutral：样本数 680，正确 340，Precision 0.5183，Recall 0.5000，F1 0.5090

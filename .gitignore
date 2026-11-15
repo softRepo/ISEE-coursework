@@ -1,0 +1,27 @@
+# Default deny: publish only reviewed text assets.
+*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/PRIVACY.md
+!/requirements.txt
+!/*.py
+!/models/
+!/models/*.py
+!/models/detectors/
+!/models/detectors/README.md
+!/utils/
+!/utils/*.py
+!/docs/
+!/docs/report.tex
+!/docs/results/
+!/docs/results/*.txt
+!/docs/results/*.csv
+!/docs/results/*.md
+!/tools/
+!/tools/check_privacy.py
+!/.githooks/
+!/.githooks/pre-commit
+!/.github/
+!/.github/workflows/
+!/.github/workflows/privacy.yml

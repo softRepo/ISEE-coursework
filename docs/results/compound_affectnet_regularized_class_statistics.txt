@@ -1,0 +1,13 @@
+RAF-DB Compound 复合表情各类别识别效果统计
+说明：标签已从原始 1-11 映射为训练使用的 0-10。
+0 开心-惊讶 / Happily Surprised：样本数 135，正确 104，Precision 0.7591，Recall 0.7704，F1 0.7647
+1 开心-厌恶 / Happily Disgusted：样本数 47，正确 26，Precision 0.3467，Recall 0.5532，F1 0.4262
+2 悲伤-恐惧 / Sadly Fearful：样本数 22，正确 4，Precision 0.1600，Recall 0.1818，F1 0.1702
+3 悲伤-愤怒 / Sadly Angry：样本数 33，正确 9，Precision 0.1875，Recall 0.2727，F1 0.2222
+4 悲伤-惊讶 / Sadly Surprised：样本数 18，正确 5，Precision 0.1316，Recall 0.2778，F1 0.1786
+5 悲伤-厌恶 / Sadly Disgusted：样本数 141，正确 75，Precision 0.7009，Recall 0.5319，F1 0.6048
+6 恐惧-愤怒 / Fearfully Angry：样本数 33，正确 17，Precision 0.5000，Recall 0.5152，F1 0.5075
+7 恐惧-惊讶 / Fearfully Surprised：样本数 116，正确 59，Precision 0.7867，Recall 0.5086，F1 0.6178
+8 愤怒-惊讶 / Angrily Surprised：样本数 38，正确 19，Precision 0.2603，Recall 0.5000，F1 0.3423
+9 愤怒-厌恶 / Angrily Disgusted：样本数 174，正确 80，Precision 0.6723，Recall 0.4598，F1 0.5461
+10 厌恶-惊讶 / Disgustedly Surprised：样本数 35，正确 13，Precision 0.2131，Recall 0.3714，F1 0.2708

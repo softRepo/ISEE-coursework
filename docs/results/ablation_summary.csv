@@ -1,0 +1,8 @@
+group,experiment_name,dataset,task_type,input_type,training_strategy,accuracy,micro_precision,micro_recall,micro_f1,macro_precision,macro_recall,macro_f1,notes
+输入形式消融,FER2013 灰度 MiniResNet 在 RAF-DB 外部测试,RAF-DB test,7类softmax,灰度48×48,外部测试,0.5684,,,,0.4885,0.4187,0.3921,FER2013 灰度模型跨数据集测试，存在明显域差异。
+输入形式消融,RAF-DB RGB MiniResNet,RAF-DB test,7类softmax,RGB96×96,RAF-DB 从头训练,0.8380,,,,0.7597,0.7621,0.7591,同源 RAF-DB 彩色图像训练与测试，保留颜色和纹理信息。
+训练策略消融,RAF-DB RGB 从头训练,RAF-DB test,7类softmax,RGB96×96,从头训练,0.8380,,,,0.7597,0.7621,0.7591,使用 RAF-DB 训练集从头训练，测试集与训练集同源。
+训练策略消融,AffectNet 预训练 + RAF-DB 微调,RAF-DB test,7类softmax,RGB96×96,预训练微调,0.8181,,,,0.7476,0.7179,0.7302,先在 AffectNet 上预训练，再迁移到 RAF-DB 上微调。
+任务形式对比,RAF-DB RGB 基本七类表情识别,RAF-DB test,7类softmax,RGB96×96,RAF-DB 从头训练,0.8380,,,,0.7597,0.7621,0.7591,基本七类表情识别任务，类别定义相对稳定。
+任务形式对比,RAF-DB Compound 11类复合表情识别,RAF-DB Compound test,11类softmax,RGB96×96,AffectNet 预训练微调,0.5846,,,,0.4630,0.4435,0.4492,复合表情类别更细，类别语义相近，样本数量更少。
+任务形式对比,RAF-ML 6维多标签混合表情识别,RAF-ML test,6维sigmoid多标签,RGB96×96,AffectNet 预训练微调,,0.7753,0.7431,0.7588,0.7592,0.7163,0.7352,多标签 sigmoid 任务，没有普通单标签 Accuracy，主指标为 Micro F1 和 Macro F1。

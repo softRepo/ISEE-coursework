@@ -1,0 +1,18 @@
+RAF-ML 多标签混合表情 RGB 模型测试集分类报告
+模型名称：rafml_rgb_mini_resnet
+sigmoid 阈值：0.50
+说明：RAF-ML 是 6 维 sigmoid 多标签识别，没有 Neutral 类。
+Micro Precision：0.7753
+Micro Recall：0.7431
+Micro F1：0.7588
+Macro Precision：0.7592
+Macro Recall：0.7163
+Macro F1：0.7352
+
+标签        英文名称             Precision      Recall    F1-score   Support   AvgProb
+惊讶        Surprise            0.8469      0.8137      0.8300       408    0.4140
+恐惧        Fear                0.7514      0.5603      0.6420       232    0.1998
+厌恶        Disgust             0.8459      0.8553      0.8506       539    0.5576
+开心        Happiness           0.6462      0.6512      0.6486       258    0.2714
+悲伤        Sadness             0.7081      0.6647      0.6857       343    0.3404
+愤怒        Anger               0.7565      0.7526      0.7546       384    0.3978

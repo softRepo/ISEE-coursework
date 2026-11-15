@@ -1,0 +1,9 @@
+CK+ 各类别识别效果统计
+说明：统计结果基于删除 Contempt 后的 7 类样本。
+Angry：样本数 45，正确 18，Precision 0.2951，Recall 0.4000，F1 0.3396
+Disgust：样本数 59，正确 12，Precision 0.9231，Recall 0.2034，F1 0.3333
+Fear：样本数 25，正确 4，Precision 0.2105，Recall 0.1600，F1 0.1818
+Happy：样本数 69，正确 65，Precision 0.8333，Recall 0.9420，F1 0.8844
+Sad：样本数 28，正确 20，Precision 0.1290，Recall 0.7143，F1 0.2186
+Surprise：样本数 83，正确 72，Precision 0.9474，Recall 0.8675，F1 0.9057
+Neutral：样本数 593，正确 453，Precision 0.9060，Recall 0.7639，F1 0.8289

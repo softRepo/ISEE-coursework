@@ -1,0 +1,29 @@
+name: Privacy checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  publication:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Check tracked publication content
+        run: python3 tools/check_privacy.py --tracked
+      - name: Check Python syntax without importing dependencies
+        run: |
+          python3 - <<'PY'
+          import ast
+          import subprocess
+          from pathlib import Path
+          for raw_path in subprocess.check_output(['git', 'ls-files', '-z']).split(b'\0'):
+              if raw_path and raw_path.endswith(b'.py'):
+                  path = Path(raw_path.decode('utf-8'))
+                  ast.parse(path.read_text(encoding='utf-8-sig'), filename=str(path))
+          PY

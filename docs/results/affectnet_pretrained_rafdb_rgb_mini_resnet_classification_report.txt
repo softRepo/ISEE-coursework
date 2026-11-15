@@ -1,0 +1,16 @@
+RAF-DB RGB 模型测试集分类报告
+模型名称：rgb_mini_resnet
+说明：模型使用 RAF-DB RGB 彩色图像训练，标签已映射为 FER2013 的统一 7 类顺序。
+Accuracy：0.8181
+Macro Precision：0.7476
+Macro Recall：0.7179
+Macro F1-score：0.7302
+
+类别             Precision      Recall    F1-score   Support
+Angry             0.6981      0.6852      0.6916       162
+Disgust           0.5433      0.4313      0.4808       160
+Fear              0.7193      0.5541      0.6260        74
+Happy             0.9236      0.9181      0.9209      1185
+Sad               0.7576      0.7845      0.7708       478
+Surprise          0.8254      0.8480      0.8366       329
+Neutral           0.7661      0.8044      0.7848       680

@@ -1,0 +1,18 @@
+RAF-DB 外部泛化测试分类报告
+模型名称：mini_resnet
+评估划分：test
+说明：RAF-DB 原始标签 1 到 7 已按 RAF_TO_FER 映射为 FER2013 的 0 到 6 标签顺序。
+RAF-DB 原始标签顺序：1 Surprise，2 Fear，3 Disgust，4 Happy，5 Sad，6 Angry，7 Neutral。
+Accuracy：0.5684
+Macro Precision：0.4885
+Macro Recall：0.4187
+Macro F1-score：0.3921
+
+FER类别          Precision      Recall    F1-score   Support
+Angry             0.3093      0.5556      0.3974       162
+Disgust           0.3548      0.0688      0.1152       160
+Fear              0.1684      0.2162      0.1893        74
+Happy             0.8300      0.7747      0.8014      1185
+Sad               0.3868      0.6757      0.4920       478
+Surprise          0.8519      0.1398      0.2402       329
+Neutral           0.5183      0.5000      0.5090       680

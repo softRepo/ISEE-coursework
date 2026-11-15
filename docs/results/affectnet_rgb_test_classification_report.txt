@@ -1,0 +1,16 @@
+AffectNet RGB 预训练模型 test set 分类报告
+模型名称：rgb_mini_resnet
+说明：已删除 class_id=1 的 Contempt 类，剩余类别已映射到项目统一 FER2013 七类顺序。
+Accuracy：0.1688
+Macro Precision：0.0517
+Macro Recall：0.1492
+Macro F1-score：0.0587
+
+类别             Precision      Recall    F1-score   Support
+Angry             0.0000      0.0000      0.0000       383
+Disgust           0.0000      0.0000      0.0000       327
+Fear              0.1948      0.0943      0.1271       318
+Happy             0.1670      0.9499      0.2841       399
+Sad               0.0000      0.0000      0.0000       278
+Surprise          0.0000      0.0000      0.0000       468
+Neutral           0.0000      0.0000      0.0000       250

@@ -1,0 +1,9 @@
+AffectNet RGB 预训练模型各类别识别效果统计
+说明：类别顺序为项目统一的 FER2013 标签顺序，Contempt 类已删除。
+Angry：样本数 383，正确 0，Precision 0.0000，Recall 0.0000，F1 0.0000
+Disgust：样本数 327，正确 0，Precision 0.0000，Recall 0.0000，F1 0.0000
+Fear：样本数 318，正确 30，Precision 0.1948，Recall 0.0943，F1 0.1271
+Happy：样本数 399，正确 379，Precision 0.1670，Recall 0.9499，F1 0.2841
+Sad：样本数 278，正确 0，Precision 0.0000，Recall 0.0000，F1 0.0000
+Surprise：样本数 468，正确 0，Precision 0.0000，Recall 0.0000，F1 0.0000
+Neutral：样本数 250，正确 0，Precision 0.0000，Recall 0.0000，F1 0.0000

@@ -1,0 +1,9 @@
+RAF-DB RGB 模型各类别识别效果统计
+说明：类别顺序为项目统一的 FER2013 标签顺序。
+Angry：样本数 162，正确 111，Precision 0.6981，Recall 0.6852，F1 0.6916
+Disgust：样本数 160，正确 69，Precision 0.5433，Recall 0.4313，F1 0.4808
+Fear：样本数 74，正确 41，Precision 0.7193，Recall 0.5541，F1 0.6260
+Happy：样本数 1185，正确 1088，Precision 0.9236，Recall 0.9181，F1 0.9209
+Sad：样本数 478，正确 375，Precision 0.7576，Recall 0.7845，F1 0.7708
+Surprise：样本数 329，正确 279，Precision 0.8254，Recall 0.8480，F1 0.8366
+Neutral：样本数 680，正确 547，Precision 0.7661，Recall 0.8044，F1 0.7848

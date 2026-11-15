@@ -1,0 +1,8 @@
+RAF-ML 多标签混合表情各标签识别效果统计
+说明：每个标签都是一个独立 sigmoid 二分类维度。
+0 惊讶 / Surprise：Support 408，Precision 0.0000，Recall 0.0000，F1 0.0000，平均预测概率 0.3561
+1 恐惧 / Fear：Support 232，Precision 0.4406，Recall 0.3836，F1 0.4101，平均预测概率 0.3287
+2 厌恶 / Disgust：Support 539，Precision 0.5876，Recall 0.6345，F1 0.6102，平均预测概率 0.5075
+3 开心 / Happiness：Support 258，Precision 0.3750，Recall 0.0116，F1 0.0226，平均预测概率 0.2454
+4 悲伤 / Sadness：Support 343，Precision 0.3264，Recall 0.1837，F1 0.2351，平均预测概率 0.4371
+5 愤怒 / Anger：Support 384，Precision 0.4191，Recall 0.4453，F1 0.4318，平均预测概率 0.4940

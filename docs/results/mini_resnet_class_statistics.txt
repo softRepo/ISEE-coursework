@@ -1,0 +1,8 @@
+各类别识别效果统计
+Angry：样本数 491，正确 306，Precision 0.5774，Recall 0.6232，F1 0.5994
+Disgust：样本数 55，正确 32，Precision 0.6275，Recall 0.5818，F1 0.6038
+Fear：样本数 528，正确 206，Precision 0.5754，Recall 0.3902，F1 0.4650
+Happy：样本数 879，正确 733，Precision 0.8675，Recall 0.8339，F1 0.8503
+Sad：样本数 594，正确 317，Precision 0.4832，Recall 0.5337，F1 0.5072
+Surprise：样本数 416，正确 320，Precision 0.7901，Recall 0.7692，F1 0.7795
+Neutral：样本数 626，正确 426，Precision 0.5726，Recall 0.6805，F1 0.6219
