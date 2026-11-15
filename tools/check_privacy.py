@@ -3,7 +3,8 @@
 Use --tree before Git initialization, --tracked before publishing, and
 --staged in a pre-commit hook. Git modes inspect index blobs, including
 files added with git add --force, rather than trusting .gitignore.
-Only the exact manually audited report PDF is allowed as a binary asset.
+Only the exact manually audited report PDF and presentation are allowed as
+binary assets.
 """
 
 from __future__ import annotations
@@ -36,10 +37,11 @@ PATTERNS = {
     "URL with credentials": re.compile(r"https?://[^\s/@]+:[^\s/@]+@"),
 }
 MAX_TEXT_SIZE = 2 * 1024 * 1024
-# Updating a report requires another PDF content and metadata review before
-# replacing this digest. Other PDFs and modified bytes remain blocked.
-APPROVED_PDFS = {
+# Updating these files requires another content and metadata review before
+# replacing a digest. Other binary files and modified bytes remain blocked.
+APPROVED_BINARIES = {
     "docs/report.pdf": "3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6",
+    "docs/presentation.pptx": "755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2",
 }
 
 
@@ -47,7 +49,7 @@ def allowed_path(name: str) -> bool:
     path = PurePosixPath(name)
     if path.is_absolute() or ".." in path.parts or "\\" in name:
         return False
-    if name in EXACT_PATHS or name in APPROVED_PDFS:
+    if name in EXACT_PATHS or name in APPROVED_BINARIES:
         return True
     if path.suffix == ".py" and len(path.parts) == 1:
         return True
@@ -64,11 +66,13 @@ def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:
         findings.append("symlink or submodule is not allowed")
     if len(data) > MAX_TEXT_SIZE:
         return findings + ["oversized publication file"]
-    if name in APPROVED_PDFS:
-        if hashlib.sha256(data).hexdigest() != APPROVED_PDFS[name]:
-            findings.append("report PDF differs from the manually audited version")
-        if not data.startswith(b"%PDF-") or not data.rstrip().endswith(b"%%EOF"):
+    if name in APPROVED_BINARIES:
+        if hashlib.sha256(data).hexdigest() != APPROVED_BINARIES[name]:
+            findings.append("binary document differs from the manually audited version")
+        if name.endswith(".pdf") and (not data.startswith(b"%PDF-") or not data.rstrip().endswith(b"%%EOF")):
             findings.append("invalid report PDF envelope")
+        if name.endswith(".pptx") and not data.startswith(b"PK\x03\x04"):
+            findings.append("invalid presentation envelope")
         return findings
     if b"\0" in data:
         return findings + ["binary file"]

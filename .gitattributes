@@ -5,4 +5,5 @@
 *.csv text eol=lf
 *.yml text eol=lf
 *.pdf binary
+*.pptx binary
 /.githooks/* text eol=lf
