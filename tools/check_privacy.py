@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXACT_PATHS = {
     ".gitignore", ".gitattributes", "README.md", 
     "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
-    "人工智能/README.md", "电子工程训练（甲）/README.md",
+    "人工智能/README.md", "电子工程训练（甲）/README.md", "大学物理实验/README.md",
 }
 FACE_PREFIX = "人工智能/人脸表情识别/"
 LAB_PREFIX = "人工智能/AILAB/"
@@ -197,6 +197,20 @@ APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'f4f7672b51
  '信号与系统课程设计/课题E_孤立数字语音识别/results/figures/mfcc_heatmap_example.png': '1e16ab35b20cfc69f93f4ff2f2a1958ccb84b9f858ee5126a7b35c79ddb2aacd',
  '信号与系统课程设计/课题E_孤立数字语音识别/results/figures/preprocess_example.png': '8331c59f9a738e8fdad7dff4808527e1bb4e4a64ba1a19e0cb3552aa91c4d487',
  '信号与系统课程设计/课题E_孤立数字语音识别/设计报告.pdf': 'f9eb1b31c9301bf29f56966eb498a3e9187ef0fbeb80cc5bf7726fd5023c67c6',
+ '大学物理实验/实验报告/万用表的设计.pdf': '97f1a81194bf20361bb01e38925691437023d53db1fa4243abbfc2cc3fd8b45d',
+ '大学物理实验/实验报告/光电效应测定普朗克常量.pdf': 'fc9a805563540871f3f6bdcfbba29e7c48b6f4a8e21e947c60e75ad2a5f3402c',
+ '大学物理实验/实验报告/光速测量.pdf': '0de026d33cf7d42f6a5545f7bd7cd2377ed55d2b35c0f497a10d9efb1cd864a5',
+ '大学物理实验/实验报告/分光计的调整和使用.pdf': 'c799ba36326d75f4cfe2141a93d44c4da3f8b29764448c662c2f8168f58a2ac5',
+ '大学物理实验/实验报告/密立根油滴实验.pdf': 'd31559a1995b5cd601ad4a65980430eb432f5bdcb734ea07ef7c7fff3030c5c7',
+ '大学物理实验/实验报告/弗兰克赫兹实验.pdf': 'bfec0933a8fff0f0cd7fbf434969c0a2755e42dae7c46bf157cf5400f2db2c9f',
+ '大学物理实验/实验报告/惠斯登电桥.pdf': '71ffec9ab300cde88c0e712ccc0bcff8d9a279062e6c25eb6df94b1f266712b6',
+ '大学物理实验/实验报告/棱镜偏向角特性.pdf': '1e5a30d314472cdce48d4a42861aa6124da08feaf3da9a3ae995a199bdca2cb9',
+ '大学物理实验/实验报告/用双臂电桥测低电阻.pdf': 'b16d6f73ee0c24cedce0951ad5961b47896a4c8d1914ebdb67abccd8d8967705',
+ '大学物理实验/实验报告/用霍尔法测直流圆线圈与亥姆霍兹线圈磁场.pdf': 'abcd80023cf40c41bbc39b001018fed11290a5001e9cdbe7b3b3726c0a8f5bbb',
+ '大学物理实验/实验报告/示波器的应用.pdf': '3781d1ce20abc51d00a061f09ba72ea82c373bd90f7040714afc968670657a1d',
+ '大学物理实验/实验报告/等厚干涉.pdf': 'efcbed67b3a0237328c9ed03a98e78d78f4134b567af11a8383af5afc50395f9',
+ '大学物理实验/实验报告/金属材料杨氏模量的测定.pdf': '1b394c5da658b2d4e7d7c3bdfb91d95a7807a959ffbbe3e1cad106bf5c2a461b',
+ '大学物理实验/实验报告/非平衡电桥.pdf': '6840782d6e149eedf4063154837952cdd1ab02c404e1b26c6d55a385a23c8f40',
  '电子工程训练（甲）/基础实验/基础部分实验报告.pdf': '0f8dc3dbce39236cef5309d9d13f059fccb63c0787298752035626e0ce17e955',
  '电子工程训练（甲）/小车/最终照片/01-上视图.png': '903ca3d1c2e11591b36b4d9d9122f064c0985a47531ac5b1107706152bd1afb7',
  '电子工程训练（甲）/小车/最终照片/02-底部结构.png': 'c49b190c5a090ecc91de3eaa4ea8d409154ce15b9768c015f09cb4b65bf0cc55',
