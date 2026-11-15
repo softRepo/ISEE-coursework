@@ -8,3 +8,5 @@
 *.pptx binary
 /.githooks/* text eol=lf
 *.png binary
+*.m text eol=lf
+*.wav binary
