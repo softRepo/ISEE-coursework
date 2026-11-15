@@ -7,3 +7,4 @@
 *.pdf binary
 *.pptx binary
 /.githooks/* text eol=lf
+*.png binary

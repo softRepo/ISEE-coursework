@@ -3,8 +3,8 @@
 Use --tree before Git initialization, --tracked before publishing, and
 --staged in a pre-commit hook. Git modes inspect index blobs, including
 files added with git add --force, rather than trusting .gitignore.
-Only the exact manually audited lab reports, project report and presentation
-are allowed as binary assets.
+Only the exact manually audited reports, presentation and privacy-processed
+photos are allowed as binary assets.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXACT_PATHS = {
     ".gitignore", ".gitattributes", "README.md", "PRIVACY.md",
     "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
-    "人工智能/README.md",
+    "人工智能/README.md", "电工训/README.md",
 }
 FACE_PREFIX = "人工智能/人脸表情识别/"
 LAB_PREFIX = "人工智能/AILAB/"
@@ -68,13 +68,22 @@ PATTERNS = {
     "URL with credentials": re.compile(r"https?://[^\s/@]+:[^\s/@]+@"),
 }
 MAX_TEXT_SIZE = 2 * 1024 * 1024
+MAX_APPROVED_BINARY_SIZE = 64 * 1024 * 1024
 # Updating these files requires another content and metadata review before
 # replacing a digest. Other binary files and modified bytes remain blocked.
 APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'fe3a59f2751e0ab99f5b0a0c80004924ee68dc71e2c28dd869dfa7e773b28747',
  '人工智能/AILAB/AI_Lab2/report/report.pdf': '23dfa679a8bc7e2378cd418beb1b640581dbb5939dd1c5bde22946b35b31af44',
  '人工智能/AILAB/AI_Lab3/report/report.pdf': '17f1cd1232c2568329b2154f1138aed8079df569b5931610daaa8c257056c451',
  '人工智能/人脸表情识别/docs/presentation.pptx': '755dc2c444d4f02594943ba9bb458ff7a4a7e31dc783ba11c4ea24dc28ecf7f2',
- '人工智能/人脸表情识别/docs/report.pdf': '3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6'}
+ '人工智能/人脸表情识别/docs/report.pdf': '3425761fb080b27376dd9189b5f3568adac74da3772b2aec9d1d4e284c02d3a6',
+ '电工训/基础实验/基础部分实验报告.pdf': 'a5a51f9d4466c309365427cde7a6a368670badc0959edd55e1edb2e8fe86bcad',
+ '电工训/小车/最终照片/01-上视图.png': '903ca3d1c2e11591b36b4d9d9122f064c0985a47531ac5b1107706152bd1afb7',
+ '电工训/小车/最终照片/02-底部结构.png': 'c49b190c5a090ecc91de3eaa4ea8d409154ce15b9768c015f09cb4b65bf0cc55',
+ '电工训/小车/最终照片/03-正面结构.png': '089b2c53887d5420782dc87579285486265b6fb341bd17c06adbcadfde3f062a',
+ '电工训/小车/最终照片/04-侧面全貌.png': '9e94ff91ac407ae74c5e65ff32417f0c25c2ce974a890f7299aa06c9811a90dc',
+ '电工训/智能插座/智能插座测试报告.pdf': '84501652ea9ef517532bd7abc17af228245255e82edef82b116f5a9a81b048d7',
+ '电工训/智能插座/照片/01-PCB元件面.png': 'd656f0356ce88f56b4a2343c88d4978e30d213ccfa09947dc26c7e0f87793c6d',
+ '电工训/智能插座/照片/02-PCB焊接面.png': '30db4649fa16854093f4c6153cf5b9907bc6b3c220af32ca95ba5539e46e1177'}
 
 
 def allowed_path(name: str) -> bool:
@@ -104,7 +113,8 @@ def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:
         findings.append("file outside publication allowlist")
     if mode not in {"100644", "100755"}:
         findings.append("symlink or submodule is not allowed")
-    if len(data) > MAX_TEXT_SIZE:
+    limit = MAX_APPROVED_BINARY_SIZE if name in APPROVED_BINARIES else MAX_TEXT_SIZE
+    if len(data) > limit:
         return findings + ["oversized publication file"]
     if name in APPROVED_BINARIES:
         if hashlib.sha256(data).hexdigest() != APPROVED_BINARIES[name]:
@@ -113,6 +123,8 @@ def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:
             findings.append("invalid report PDF envelope")
         if name.endswith(".pptx") and not data.startswith(b"PK\x03\x04"):
             findings.append("invalid presentation envelope")
+        if name.endswith(".png") and (not data.startswith(b"\x89PNG\r\n\x1a\n") or not data.endswith(b"IEND\xaeB`\x82")):
+            findings.append("invalid approved PNG envelope")
         return findings
     if b"\0" in data:
         return findings + ["binary file"]
