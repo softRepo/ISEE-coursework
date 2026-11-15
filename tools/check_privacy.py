@@ -340,6 +340,7 @@ APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'f4f7672b51
  '人工智能/AILAB/AI_Lab3/report/report.pdf': '5bd51467cd7c48b5d770382fb905ef92de0a2ce2106a1bc38a5d39dd289a1eab',
  '人工智能/人脸表情识别/docs/presentation.pptx': '6afcb22bff59b2b90f9ddf645ad20f93d7faa88179eba2029f01fc6b3624d5cf',
  '人工智能/人脸表情识别/docs/report.pdf': '990692cfd2f3d5017e72dcdf6d12fdf345b8cf76d18fd904606e478538266af7',
+ '信号与系统课程设计/课程设计要求.docx': '2f29ce9c631aef59d2a22c4f7a4f7c34ed88ef879dac0feae968d6512a4ce280',
  '信号与系统课程设计/课题ABC_音乐信号综合处理/MATLAB源码/segments/A_fur_elise_segment.wav': 'f58d1fe621aa1ce2426724406de38847d32207d487a0a7db3b507bfe56705e10',
  '信号与系统课程设计/课题ABC_音乐信号综合处理/MATLAB源码/segments/B_hotel_california_segment.wav': '5d3c5b4189609b6ba52768829c98753f9df8a9c768063ca12b114e7a77e05a45',
  '信号与系统课程设计/课题ABC_音乐信号综合处理/MATLAB源码/segments/C_faded_segment.wav': 'd7d813bff7de2419120fa06201662cf1ca0fc76721fc8012a41e464e8cf901cc',
@@ -459,8 +460,8 @@ def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:
             findings.append("binary document differs from the manually audited version")
         if name.endswith(".pdf") and (not data.startswith(b"%PDF-") or not data.rstrip().endswith(b"%%EOF")):
             findings.append("invalid report PDF envelope")
-        if name.endswith(".pptx") and not data.startswith(b"PK\x03\x04"):
-            findings.append("invalid presentation envelope")
+        if name.endswith((".pptx", ".docx")) and not data.startswith(b"PK\x03\x04"):
+            findings.append("invalid Office document envelope")
         if name.endswith(".png") and (not data.startswith(b"\x89PNG\r\n\x1a\n") or not data.endswith(b"IEND\xaeB`\x82")):
             findings.append("invalid approved PNG envelope")
         if name.endswith(".wav") and (data[:4] != b"RIFF" or data[8:12] != b"WAVE" or int.from_bytes(data[4:8], "little") + 8 != len(data)):
