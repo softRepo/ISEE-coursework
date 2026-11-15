@@ -1,5 +1,7 @@
 # 基于 PyQt5 与深度学习的人脸表情识别系统设计与实现
 
+实验报告：[阅读脱敏 PDF（34 页）](docs/report.pdf) · [LaTeX 源码](docs/report.tex)
+
 ## 1. 项目简介
 
 本项目基于 PyTorch 和 PyQt5 实现人脸表情识别系统。系统支持基本七类表情识别、复合表情识别、多标签混合表情识别，并提供图片上传识别和摄像头实时识别 GUI。
@@ -269,7 +271,7 @@ models/detectors/blaze_face_short_range.tflite
 
 - 模型权重需要按上述训练命令自行生成，放入 `checkpoints/`；GUI 首次使用前需要准备所选模型的权重。
 - 可选检测器的文件名和来源说明见 `models/detectors/README.md`。
-- 脱敏技术报告源码为 `docs/report.tex`，可使用 XeLaTeX 编译；原始插图已移除，位置保留为占位说明。
+- 脱敏实验报告可直接阅读 [PDF（34 页）](docs/report.pdf)，源码为 `docs/report.tex`，可使用 XeLaTeX 编译；原始插图已移除，位置保留为占位说明。发布的 PDF 已清除文档属性，并检查正文、书签及附件。
 - 仅汇总的分类统计和消融分析位于 `docs/results/`，不包含逐样本数据或人脸图片。
 - 评估脚本默认不导出样例图片。只有主动指定大于 0 的 `--max_samples`、`--max_wrong_samples`、`--max_correct_samples` 或 `--max_prediction_samples` 时，才会生成对应样例；导出的图片仍包含人脸，不应提交到仓库。
 - GUI 的图片选择功能在本机读取图片，摄像头识别在本机处理；当前源码没有向外部服务器上传图像的逻辑。

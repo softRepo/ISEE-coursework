@@ -1,4 +1,4 @@
-# Default deny: publish only reviewed text assets.
+# Default deny: publish reviewed text assets and the exact audited report PDF.
 *
 !/.gitignore
 !/.gitattributes
@@ -14,6 +14,7 @@
 !/utils/*.py
 !/docs/
 !/docs/report.tex
+!/docs/report.pdf
 !/docs/results/
 !/docs/results/*.txt
 !/docs/results/*.csv
