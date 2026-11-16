@@ -35,3 +35,4 @@
 *.do text eol=lf
 *.SchDoc binary
 *.PcbDoc binary
+*.ino text eol=lf
