@@ -33,3 +33,5 @@
 *.xci text eol=lf
 *.tcl text eol=lf
 *.do text eol=lf
+*.SchDoc binary
+*.PcbDoc binary

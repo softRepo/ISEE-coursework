@@ -22,6 +22,8 @@ EXACT_PATHS = {
     "tools/check_privacy.py", ".githooks/pre-commit", ".github/workflows/privacy.yml",
     "人工智能/README.md", "电子工程训练（甲）/README.md", "大学物理实验/README.md",
 }
+ELECDESIGN_PREFIX = '电子电路设计实验Ⅱ/'
+ELECDESIGN_TEXT_PATHS = {'A4/README.md', 'README.md', '示例项目/README.md'}
 DIGITAL_PREFIX = '数字系统设计实验/'
 DIGITAL_TEXT_PATHS = {'README.md',
  '参考资料/README.md',
@@ -762,7 +764,19 @@ APPROVED_BINARIES = {'人工智能/AILAB/AI_Lab1/report/report.pdf': 'f4f7672b51
  '电子工程训练（甲）/智能插座/智能插座测试报告.pdf': 'cc68b01f1f50afe471369fb935009f045cf77b1f8fc1267458d983c06140264d',
  '电子工程训练（甲）/智能插座/照片/01-PCB元件面.png': 'd656f0356ce88f56b4a2343c88d4978e30d213ccfa09947dc26c7e0f87793c6d',
  '电子工程训练（甲）/智能插座/照片/02-PCB焊接面.png': '30db4649fa16854093f4c6153cf5b9907bc6b3c220af32ca95ba5539e46e1177',
- '电子电路系统综合实验/实验报告.pdf': '04839150aef9afd1c22c1a8be00dfa7fd8bcb3262fd2414a49b2e039cb2145b8'}
+ '电子电路系统综合实验/实验报告.pdf': '04839150aef9afd1c22c1a8be00dfa7fd8bcb3262fd2414a49b2e039cb2145b8',
+ '电子电路设计实验Ⅱ/A4/PCB/TimerDesign.PcbDoc': 'ae2a251567ed0e5cc5c3acfa32fbedd49104dcaa9ad24a64fc616dfeecd722d6',
+ '电子电路设计实验Ⅱ/A4/倒计时定时器指导书.pdf': 'd692576019a2a55cdd4142ba149af1541673e47cb873490168ce6c489a231ee0',
+ '电子电路设计实验Ⅱ/A4/原理图/TimerDesign.SchDoc': 'a93e1ea7ed8a1601b68991217d94b2f5bf070671f3a99ed54ecd8644179a9e02',
+ '电子电路设计实验Ⅱ/A4/实验报告.pdf': '65a95ba3af779dda6d184c84c35ed9e224fdeb2f1b3a5f7c5fa3078bd188144e',
+ '电子电路设计实验Ⅱ/示例项目/PCB/AnalogBoard.PcbDoc': '4a1b7309971ce09fa2dd2419a571582a8b71d214a385de29c31eb01a443a8cf4',
+ '电子电路设计实验Ⅱ/示例项目/PCB/PCB布局.pdf': 'd10d6ef1468709f078b2241f3f797e737d5ca94e882d2e5fc49ddea4d4154251',
+ '电子电路设计实验Ⅱ/示例项目/原理图/AnalogBoard.SchDoc': '8ce8c16220eebc33e5fcd9dfb48aa16d714123fd085fae5d6704e13b42d3e41e',
+ '电子电路设计实验Ⅱ/示例项目/原理图/原理图.pdf': 'ee349c829c18273d931d4911ede9d591751b32f8a1341730cddf2563d61d4e1a',
+ '电子电路设计实验Ⅱ/示例项目/原理图/原理图_黑白.pdf': '2cc806b28413110df27cff7320ea5fa1c66fc9b9589331bd25103c5183f7b975',
+ '电子电路设计实验Ⅱ/示例项目/实验报告.pdf': '14fc6d37e63469a8828f719386da0af338874674a37c4ffa60b4a2734198cc45',
+ '电子电路设计实验Ⅱ/选题资料/选题A.pdf': '7d17740912e6df48251f04d7d0ae4a9a7ecf4e2438620dbd05c72f42672e7087',
+ '电子电路设计实验Ⅱ/选题资料/选题B.pdf': '281daf4734653610be184c414f890c1cb14fbed4f4c0eb8ba89ecb82b1583dde'}
 
 
 def allowed_path(name: str) -> bool:
@@ -771,6 +785,8 @@ def allowed_path(name: str) -> bool:
         return False
     if name in EXACT_PATHS or name in APPROVED_BINARIES:
         return True
+    if name.startswith(ELECDESIGN_PREFIX):
+        return name[len(ELECDESIGN_PREFIX):] in ELECDESIGN_TEXT_PATHS
     if name.startswith(DIGITAL_PREFIX):
         return name[len(DIGITAL_PREFIX):] in DIGITAL_TEXT_PATHS
     if name.startswith(SIGNALS_PREFIX):
@@ -810,6 +826,8 @@ def inspect_content(name: str, data: bytes, mode: str = "100644") -> list[str]:
             findings.append("invalid Office document envelope")
         if name.endswith(".png") and (not data.startswith(b"\x89PNG\r\n\x1a\n") or not data.endswith(b"IEND\xaeB`\x82")):
             findings.append("invalid approved PNG envelope")
+        if name.endswith((".SchDoc", ".PcbDoc")) and not data.startswith(bytes.fromhex("d0cf11e0a1b11ae1")):
+            findings.append("invalid approved CAD compound document envelope")
         if name.endswith(".wav") and (data[:4] != b"RIFF" or data[8:12] != b"WAVE" or int.from_bytes(data[4:8], "little") + 8 != len(data)):
             findings.append("invalid approved WAV envelope")
         return findings
