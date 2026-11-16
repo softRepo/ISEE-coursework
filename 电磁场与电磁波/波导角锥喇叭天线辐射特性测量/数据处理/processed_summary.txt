@@ -1,0 +1,33 @@
+S11/S21 key points
+freq_GHz,VSWR,abs_gamma,return_loss_dB,S21_dB
+6.5000,3.3320,0.5383,5.3792,-46.6530
+7.5000,1.4120,0.1708,15.3496,-27.9560
+8.0000,1.1290,0.0606,24.3517,-28.7200
+8.5000,1.0990,0.0472,26.5275,-27.8160
+
+Minimum VSWR: 1.0690 at 7.4850 GHz; |Gamma|=0.0333; RL=29.54 dB
+Maximum S21: -27.021 dB at 7.5900 GHz
+
+Pattern HPBW and beamwidth gain
+freq_GHz,H_peak_deg,H_HPBW_deg,E_peak_deg,E_HPBW_deg,GBW_dBi
+6.5000,1.0000,34.4730,3.0000,59.6642,11.9735
+7.5000,1.0000,31.2367,1.0000,46.6480,13.4705
+8.5000,1.0000,28.4505,3.0000,47.9764,13.7543
+
+Polarization selected points
+angle_deg,normal_amp,normal_dB,grid_amp,grid_dB
+0.0000,1.0000,0.0000,0.9900,-0.0873
+30.0000,0.9200,-0.7242,0.8400,-1.5144
+45.0000,0.7800,-2.1581,0.6200,-4.1522
+60.0000,0.6000,-4.4370,0.4000,-7.9588
+80.0000,0.3000,-10.4576,0.1800,-14.8945
+90.0000,0.1400,-17.0774,0.1300,-17.7211
+
+Distance fit
+R0_m=0.550, fitted_power_exponent=2.957
+
+Theoretical values at 8.00 GHz, k=1
+lambda_m=0.03750
+Tx_gain_dBi=14.33, Tx_H_HPBW_deg=30.92, Tx_E_HPBW_deg=51.68
+Rx_gain_dBi=21.22, Rx_H_HPBW_deg=17.98, Rx_E_HPBW_deg=18.21
+Far_field_tx_m=0.359, Far_field_rx_m=1.060
